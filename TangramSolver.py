@@ -1,10 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import math
-from shapely.geometry import Polygon, MultiPolygon
-from shapely.ops import cascaded_union
-import random
 import copy
+import matplotlib.pyplot as plt
+from shapely.geometry import Polygon
 import utils
 
 
