@@ -1,497 +1,329 @@
 import math
 from tkinter import *
-from math import *
 from tkinter import messagebox
+from tkinter import ttk
 
 import numpy
 from shapely.geometry import Polygon
-from TangramSolver import TangramSolver
 
-
+import SolvingThread
 # Constants
 import utils
+from CanvasPolygon import CanvasPolygon
 
 MAX_MED_TRIANGLE = 2
 MAX_SM_TRIANGLE = 4
 MAX_SQUARE = 3
 MAX_BIG_TRIANGLE = 2
-MAX_PARALLELOGRAM = 8
+MAX_PARALLELOGRAM = 4
 CANVAS_SIDE = 700
 
 
-class CanvasPolygon:
-
-    # Constructor
-    def __init__(self, coords, color, tag, canvas):
-        self.coords = coords
-        self.color = color
-        self.move = False
-        self.tag = tag
-        self.canvas = canvas
-
-        self.id = canvas.create_polygon(self.coords, fill=self.color, tags=self.tag)
-
-        canvas.tag_bind(self.id, '<Button-1>', self.start_movement)
-        canvas.tag_bind(self.id, '<Motion>', self.movement)
-        canvas.tag_bind(self.id, '<ButtonRelease-1>', self.stop_movement)
-        canvas.tag_bind(self.id, '<Button-3>', self.rotate)
-
-    def get_coords(self):
-        """ Returns polygon's coordinates """
-
-        return self.coords
-
-    def set_coords(self, coords):
-        """ Sets polygon's coordinates """
-
-        self.coords = coords
-
-    def delete(self):
-        """ Deletes specified polygon """
-
-        self.canvas.delete(self.id)
-
-    def start_movement(self, event):
-        """ Modify move attribute and converts mouse coord to canvas coord """
-
-        self.move = True
-
-        # Translate mouse coordinates to canvas coordinate
-        self.initi_x = self.canvas.canvasx(event.x)
-        self.initi_y = self.canvas.canvasy(event.y)
-
-    def movement(self, event):
-        """ Moves polygon on the canvas """
-
-        if self.move:
-
-            end_x = self.canvas.canvasx(event.x)  # Translate mouse x screen coordinate to canvas coordinate
-            end_y = self.canvas.canvasy(event.y)  # Translate mouse y screen coordinate to canvas coordinate
-
-            deltax = end_x - self.initi_x  # Find the difference
-            deltay = end_y - self.initi_y  # Find the difference
-
-            self.new_position(deltax, deltay)
-
-            self.initi_x = end_x  # Update previous current with new location
-            self.initi_y = end_y
-
-            self.canvas.move(self.id, deltax, deltay)  # Move object
-
-    def stop_movement(self, event):
-        """ Updates move attribute and sticks the moving polygon to nearby polygon """
-
-        yesCase = utils.is_nearby(self.id, drawing_place, magnetSlider)
-        if yesCase:
-            self.delete()
-            CanvasPolygon(replace(tuple_to_list(self.coords), tuple_to_list(yesCase)), self.color, self.tag, self.canvas)
-
-        self.move = False
-
-    def new_position(self, deltax, deltay):
-        """ Updates the coords of a polygon given the coordinates of the translation """
-
-        coord = tuple_to_list(self.coords)  # Retrieve object points coordinates
-        # old_coord = list(coord)  # Tuple to List
-        c = []  # New coords
-        i = 0  # Cursor on old_coord
-        for coordinates in coord:
-
-            # check if index of coordinates in range of i and len(old_coord) in old_coord is pair (x coord)
-            if (coord.index(coordinates, i, len(coord)) % 2) == 0:
-                c.append(coordinates + deltax)
-            else:  # index's impair => y-coord
-                c.append(coordinates + deltay)
-            i += 1
-
-        coord2 = tuple(c)  # List to Tuple
-        self.set_coords(coord2)
-
-    def rotate(self, event):
-        """ Rotate polygon the given angle about its center. """
-
-        theta = radians(45)  # Convert angle to radians
-        cosang, sinang = cos(theta), sin(theta)
-        new_points, a, b = [], [], []
-        i, j, cx, cy = 0, 0, 0.0, 0.0
-        points = self.get_coords()
-
-        for p in points:
-            if (points.index(p, i, len(points)) % 2) == 0:
-                a.append(p)
-            else:
-                b.append(p)
-            i += 1
-
-        # Takes center point as the first point of the Polygon to use it as pivot
-        cx = points[0]
-        cy = points[1]
-
-        # find new x_y for each point
-        for x, y in zip(a, b):
-            tx, ty = x - cx, y - cy
-            new_x = (tx * cosang + ty * sinang) + cx
-            new_y = (-tx * sinang + ty * cosang) + cy
-            new_points.append(new_x)
-            new_points.append(new_y)
-
-        self.delete()
-        new_polygon = CanvasPolygon(new_points, self.color, self.tag, self.canvas)
-
-    def print_figure_coords(figure):
-        print(figure.coords)
-
-
-def replace(original, change):
-    """ Calculates new polygon points after a matching point has been found in isNearby() """
-
-    if original and change:
-        diff = [change[0][0] - change[1][0],change[0][1] - change[1][1]]
-        new = []
-        placed = 0
-        for i,p in enumerate(original):
-            if p == change[0][0]:
-                if original[i+1] == change[0][1]:
-                    new.append(change[1][0])
-                    new.append(change[1][1])
-                    placed = i+2
-                else:
-                    new.append(p-diff[0]) if i%2 == 0 else new.append(p-diff[1])
-            else:
-                new.append(p-diff[0]) if i%2 == 0 else new.append(p-diff[1])
-
-        new.pop(placed)
-        return new
-
-
-def tuple_to_list(tuple):
-    """ Returns the list version of the tuple sent """
-
-    return list(tuple)
-
-
-def get_settings_by_type(_type, x, y):
-
-    unit = 100
-    side = math.sqrt(2)*100
-
-    if _type == "bt":
-        return MAX_BIG_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, unit * 2)).flatten().tolist(), "green"
-    elif _type == "p":
-        return MAX_PARALLELOGRAM, numpy.array(utils.get_parallelogram_points(x, y, 0, side / 2)).flatten().tolist(), "indian red"
-    elif _type == "mt":
-        return MAX_MED_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, side)).flatten().tolist(), "red"
-    elif _type == "s":
-        return MAX_SQUARE, numpy.array(utils.get_square_points(x, y, 0, unit)).flatten().tolist(), "pink"
-    elif _type == "st":
-        return MAX_SM_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, unit)).flatten().tolist(), "orange"
-
-
-def polygon_action(_type, label, action):
-    """ Add or Delete polygons of the canvas depending on what button the user clicked on """
-
-    if action == "add":
-        create_polygon(_type, label)
-    elif action == "del":
-        delete_polygon(_type, label)
-
-
-def update_count_label(label, action):
-    """ Updates the count of a label """
-
-    str_count = label["text"]
-    count = int(str_count)
-
-    if action == "+":
-        label["text"] = str(count + 1)
-    elif action == "-":
-        label["text"] = str(count - 1)
-    elif action == "reset":
-        reset_canvas()
-
-
-def label_value(label):
-    """ Converts label text to int """
-    return int(label["text"])
-
-
-def create_polygon(_type, label):
-    x = CANVAS_SIDE / 2
-    y = CANVAS_SIDE / 2
-    _max, coords, color = get_settings_by_type(_type, x, y)
-
-    if label_value(label) + 1 <= _max and label_value(label) >= 0:
-        # Creating a new Polygon
-        CanvasPolygon(coords, color, _type, drawing_place)
-        update_count_label(label, "+")
-    else:
-        messagebox.showerror("Maximum reach", "You've reached the maximum amount of this item.")
-
-
-def delete_polygon(_type, label):
-    """ Deletes polygon that has for tag : 'type' """
-
-    if label_value(label) > 0:
-
-        figures = drawing_place.find_withtag(_type)
-        _len = len(figures)
-        if _len == 1:
-            drawing_place.delete(_type)
-
-        elif _len > 1:
-            result = tuple_to_list(figures)
-            drawing_place.delete(result[_len-1])
-
-        update_count_label(label, "-")
-    else:
-        messagebox.showerror("Minimum reach", "You've reached the minimum amount of this item.")
-
-
-def transformCoord():
-    """ Sends polygon's coordinates to AI """
-
-    figures = drawing_place.find_all()
-    coords = []
-    tags = []
-    if len(figures) >= 1:
-        for fig in figures:
-            tags.append(drawing_place.gettags(fig))
-            coords.append(utils.divide_coords(tuple_to_list(drawing_place.coords(fig)), 100))
-
-        types = getTypeofPolygons()
-
-        coordinates = []
-        for shape in coords:
-            poly = []
-            for i in range(int(len(shape) / 2)):
-                poly.append(utils.find_nearest(coordinates, round(shape[i * 2], 3), round(shape[i * 2 + 1], 3)))
-                # poly.append([shape[i * 2], shape[i * 2 + 1]])
-
-            coordinates.append(poly)
-
-        print(coordinates)
-
-        polygons = []
-        for shape in coordinates:
-            polygons.append(Polygon(shape))
-
-        # Output can be polygon OR multipolygon
-        output = utils.merge(polygons)
-
-        multipolygon = []
-        if not isinstance(output, Polygon):
-            print("Polygon")
-            multipolygon = list(output)
+class TangramCanvas:
+
+    def get_settings_by_type(self, _type, x, y):
+        unit = 100
+        side = round(math.sqrt(2) * 100)
+
+        if _type == "bt":
+            return MAX_BIG_TRIANGLE, numpy.array(
+                utils.get_triangle_points(x, y, 0, unit * 2)).flatten().tolist()
+        elif _type == "p":
+            return MAX_PARALLELOGRAM, numpy.array(
+                utils.get_parallelogram_points(x, y, 0, side / 2)).flatten().tolist()
+        elif _type == "mt":
+            return MAX_MED_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, side)).flatten().tolist()
+        elif _type == "s":
+            return MAX_SQUARE, numpy.array(utils.get_square_points(x, y, 0, unit)).flatten().tolist()
+        elif _type == "st":
+            return MAX_SM_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, unit)).flatten().tolist()
+
+    def polygon_action(self, _type, label, action):
+        """ Add or Delete polygons of the canvas depending on what button the user clicked on """
+        if action == "add":
+            self.create_polygon(_type, label)
+        elif action == "del":
+            self.delete_polygon(_type, label)
+
+    def label_value(self, label):
+        """ Converts label text to int """
+        return int(label["text"])
+
+    def create_polygon(self, _type, label):
+        x = CANVAS_SIDE / 2
+        y = CANVAS_SIDE / 2
+        _max, coords = self.get_settings_by_type(_type, x, y)
+        color = utils.random_color()
+
+        if self.label_value(label) + 1 <= _max and self.label_value(label) >= 0:
+            # Creating a new Polygon
+            CanvasPolygon(coords, color, _type, self.drawing_place, self.magnetSlider)
+            utils.update_count_label(label, "+")
         else:
-            multipolygon = [output]
-            print("Multipolygon")
+            messagebox.showerror("Maximum reach", "You've reached the maximum amount of this item.")
 
-        # Convert check multipolygon and convert it into list of polygon
-        for sub_ref in multipolygon:
+    def delete_polygon(self, _type, label):
+        """ Deletes polygon that has for tag : 'type' """
 
-            print(len(sub_ref.exterior.xy[0]))
-            xy = []
-            for i in range(len(sub_ref.exterior.xy[0])):
-                xy.append(sub_ref.exterior.xy[0][i] * 100)
-                xy.append(sub_ref.exterior.xy[1][i] * 100)
+        if self.label_value(label) > 0:
 
-            CanvasPolygon(xy, 'black', "origin", drawing_place)
-            print(xy)
+            figures = self.drawing_place.find_withtag(_type)
+            _len = len(figures)
+            if _len == 1:
+                self.drawing_place.delete(_type)
 
-        print(types)
+            elif _len > 1:
+                result = utils.tuple_to_list(figures)
+                self.drawing_place.delete(result[_len - 1])
 
-        solve(output, types)
-    else:
-        messagebox.showerror("No polygons on canvas", "Please add at least one polygon before testing our AI")
+            utils.update_count_label(label, "-")
+        else:
+            messagebox.showerror("Minimum reach", "You've reached the minimum amount of this item.")
 
+    def transformCoord(self):
+        """ Sends polygon's coordinates to AI """
 
-def solve(original, types):
+        figures = self.drawing_place.find_all()
+        coords = []
+        tags = []
+        if len(figures) >= 1:
+            for fig in figures:
+                tags.append(self.drawing_place.gettags(fig))
+                coords.append(utils.divide_coords(utils.tuple_to_list(self.drawing_place.coords(fig)), 100))
 
-    tangram_solver = TangramSolver(original, types)
-    tangram_solver.execute()
+            types = self.getTypeofPolygons()
 
+            coordinates = []
+            for shape in coords:
+                poly = []
+                for i in range(int(len(shape) / 2)):
+                    # poly.append(utils.find_nearest(coordinates, round(shape[i * 2], 2), round(shape[i * 2 + 1], 2)))
+                    poly.append([round(shape[i * 2], 2), round(shape[i * 2 + 1], 2)])
 
-def getTypeofPolygons():
-    """ Gets canvas polygons types """
+                coordinates.append(poly)
 
-    types = []
-    for label in labels:
-        for i in range(0, int(label['text'])):
-            types.append(label.tag)
+            print(coordinates)
 
-    return types
+            polygons = []
+            for shape in coordinates:
+                polygons.append(Polygon(shape))
 
+            # Output can be polygon OR multipolygon
+            output = utils.merge(polygons)
+            print("Output:")
+            print(output)
 
-def reset_canvas():
-    """ Resets canvas and labels when user clicks on Reset Button """
+            multipolygon = []
+            if not isinstance(output, Polygon):
+                print("Multipolygon")
+                multipolygon = list(output)
+            else:
+                multipolygon = [output]
+                print("Polygon")
 
-    figures = drawing_place.find_all()
-    for fig in figures:
-        drawing_place.delete(fig)
+            utils.reset_canvas(self.drawing_place, self.labels)
 
-    for label in labels:
-        label["text"] = "0"
+            # Convert check multipolygon and convert it into list of polygon
+            for sub_ref in multipolygon:
 
-def getPolygonsLimits():
-    """ Updates at initialization, labels for polygons limits """
+                print(len(sub_ref.exterior.xy[0]))
+                xy = []
+                for i in range(len(sub_ref.exterior.xy[0])):
+                    xy.append(sub_ref.exterior.xy[0][i] * 100)
+                    xy.append(sub_ref.exterior.xy[1][i] * 100)
 
-    labelMax1["text"] = str(MAX_MED_TRIANGLE)
-    labelMax2["text"] = str(MAX_SM_TRIANGLE)
-    labelMax3["text"] = str(MAX_SQUARE)
-    labelMax4["text"] = str(MAX_BIG_TRIANGLE)
-    labelMax5["text"] = str(MAX_PARALLELOGRAM)
+                CanvasPolygon(xy, 'black', "origin", self.drawing_place, self.magnetSlider, False)
+                print(xy)
 
-def mode_validate_button(currState):
-    """ Disables validate button to let AI work """
+            print(types)
 
-    if currState == "disabled":
-        btn_validate['state'] = "normal"
-    else:
-        btn_validate['state'] = "disabled"
+            should_reset = SolvingThread.solve(output, types, self.window, self.progress)
+            if should_reset:
+                utils.reset_canvas(self.drawing_place, self.labels)
+                self.window.protocol("WM_DELETE_WINDOW", self.close_event)
 
+            # utils.draw_node(shapes, state, ref)
 
-""" Tkinter objets definitions """
+        else:
+            messagebox.showerror("No polygons on canvas", "Please add at least one polygon before testing our AI")
 
-# -- Window definition
-window = Tk()
-window.title("Tangram")
-window.iconbitmap("img/tangram_logo.ico")
-window.geometry("1260x800")
-window.scale = 1
+    def close_event(self):
+        self.window.destroy()
 
-labels = []  # Keep track of all polygon's number labels
+    def getTypeofPolygons(self):
+        """ Gets canvas polygons types """
 
-# -- Canvas & Frame definition
-drawing_place = Canvas(window, width=700, height=700, bg="grey")
-drawing_place.pack(pady=20, padx=0)
+        types = []
+        for label in self.labels:
+            for i in range(0, int(label['text'])):
+                types.append(label.tag)
 
-numPolygonsFrame = LabelFrame(window, text="Number of Polygons", padx=20, pady=10, labelanchor="nw")
-numPolygonsFrame.place(x=70, y=50)
+        return types
 
-magnetFrame = LabelFrame(window, text="Magnetization distance", padx=10, pady=5, labelanchor="nw")
-magnetFrame.place(x=40, y=250)
+    def getPolygonsLimits(self):
+        """ Updates at initialization, labels for polygons limits """
 
-commandFrame = LabelFrame(window, text="Actions", padx=5, pady=5, labelanchor="nw")
-commandFrame.place(x=70, y=350)
+        self.labelMax1["text"] = str(MAX_MED_TRIANGLE)
+        self.labelMax2["text"] = str(MAX_SM_TRIANGLE)
+        self.labelMax3["text"] = str(MAX_SQUARE)
+        self.labelMax4["text"] = str(MAX_BIG_TRIANGLE)
+        self.labelMax5["text"] = str(MAX_PARALLELOGRAM)
 
-polygonsLimitsFrame = LabelFrame(window, text="Polygon's limits", padx=5, pady=5, labelanchor="nw")
-polygonsLimitsFrame.place(x=70, y=500)
+    def __init__(self):
+        """ Tkinter objets definitions """
 
+        # -- Window definition
+        self.window = Tk()
+        self.window.title("Tangram")
+        self.window.iconbitmap("img/tangram_logo.ico")
+        self.window.geometry("1260x800")
+        self.window.scale = 1
 
-# Polygons images next to + _ - buttons
-imgMT = PhotoImage(file='img/mt.png')
-button = Button(numPolygonsFrame, image=imgMT)
-button.grid(row=1, column=4)
+        self.labels = []  # Keep track of all polygon's number labels
 
-imgST = PhotoImage(file='img/st.png')
-button = Button(numPolygonsFrame, image=imgST)
-button.grid(row=2, column=4)
+        # -- Canvas & Frame definition
+        self.drawing_place = Canvas(self.window, width=700, height=700, bg="grey")
+        self.drawing_place.pack(pady=20, padx=0)
 
-imgSQ = PhotoImage(file='img/sq.png')
-button = Button(numPolygonsFrame, image=imgSQ)
-button.grid(row=3, column=4)
+        self.numPolygonsFrame = LabelFrame(self.window, text="Number of Polygons", padx=20, pady=10, labelanchor="nw")
+        self.numPolygonsFrame.place(x=70, y=50)
 
-imgBT = PhotoImage(file='img/bt.png')
-button = Button(numPolygonsFrame, image=imgBT)
-button.grid(row=4, column=4)
+        self.magnetFrame = LabelFrame(self.window, text="Magnetization distance", padx=10, pady=5, labelanchor="nw")
+        self.magnetFrame.place(x=40, y=250)
 
-imgP = PhotoImage(file='img/p.png')
-button = Button(numPolygonsFrame, image=imgP)
-button.grid(row=5, column=4)
+        self.commandFrame = LabelFrame(self.window, text="Actions", padx=5, pady=5, labelanchor="nw")
+        self.commandFrame.place(x=70, y=350)
 
-# Polygons images + maximum limits
-max1 = Button(polygonsLimitsFrame, image=imgMT)
-labelMax1 = Label(polygonsLimitsFrame, text=0)
-max2 = Button(polygonsLimitsFrame, image=imgST)
-labelMax2 = Label(polygonsLimitsFrame, text=0)
-max3 = Button(polygonsLimitsFrame, image=imgSQ)
-labelMax3 = Label(polygonsLimitsFrame, text=0)
-max4 = Button(polygonsLimitsFrame, image=imgBT)
-labelMax4 = Label(polygonsLimitsFrame, text=0)
-max5 = Button(polygonsLimitsFrame, image=imgP)
-labelMax5 = Label(polygonsLimitsFrame, text=0)
+        self.polygonsLimitsFrame = LabelFrame(self.window, text="Polygon's limits", padx=5, pady=5, labelanchor="nw")
+        self.polygonsLimitsFrame.place(x=70, y=500)
 
-max1.grid(row=1, column=1)
-max2.grid(row=2, column=1)
-max3.grid(row=3, column=1)
-max4.grid(row=4, column=1)
-max5.grid(row=5, column=1)
-labelMax1.grid(row=1, column=2)
-labelMax2.grid(row=2, column=2)
-labelMax3.grid(row=3, column=2)
-labelMax4.grid(row=4, column=2)
-labelMax5.grid(row=5, column=2)
+        # Polygons images next to + _ - buttons
+        self.imgMT = PhotoImage(file='img/mt.png')
+        self.button = Button(self.numPolygonsFrame, image=self.imgMT)
+        self.button.grid(row=1, column=4)
 
-# + or - buttons
-plusButton4 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("bt", bigTriangleLabel, "add")])
-bigTriangleLabel = Label(numPolygonsFrame, text=0, fg="dark green")
-bigTriangleLabel.tag = 'bt'
-labels.append(bigTriangleLabel)
-minusButton4 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("bt", bigTriangleLabel, "del")])
+        self.imgST = PhotoImage(file='img/st.png')
+        self.button = Button(self.numPolygonsFrame, image=self.imgST)
+        self.button.grid(row=2, column=4)
 
-plusButton5 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("p", parallelogramLabel, "add")])
-parallelogramLabel = Label(numPolygonsFrame, text=0, fg="dark green")
-parallelogramLabel.tag = 'p'
-labels.append(parallelogramLabel)
-minusButton5 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("p", parallelogramLabel, "del")])
+        self.imgSQ = PhotoImage(file='img/sq.png')
+        self.button = Button(self.numPolygonsFrame, image=self.imgSQ)
+        self.button.grid(row=3, column=4)
 
-plusButton1 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("mt", medTriangleLabel, "add")])
-medTriangleLabel = Label(numPolygonsFrame, text=0, fg="dark green")
-medTriangleLabel.tag = 'mt'
-labels.append(medTriangleLabel)
-minusButton1 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("mt", medTriangleLabel, "del")])
+        self.imgBT = PhotoImage(file='img/bt.png')
+        self.button = Button(self.numPolygonsFrame, image=self.imgBT)
+        self.button.grid(row=4, column=4)
 
-plusButton3 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("s", squareLabel, "add")])
-squareLabel = Label(numPolygonsFrame, text=0, fg="dark green")
-squareLabel.tag = 's'
-labels.append(squareLabel)
-minusButton3 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("s", squareLabel, "del")])
+        self.imgP = PhotoImage(file='img/p.png')
+        self.button = Button(self.numPolygonsFrame, image=self.imgP)
+        self.button.grid(row=5, column=4)
 
-plusButton2 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("st", smallTriangleLabel, "add")])
-smallTriangleLabel = Label(numPolygonsFrame, text=0, fg="dark green")
-smallTriangleLabel.tag = 'st'
-labels.append(smallTriangleLabel)
-minusButton2 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("st", smallTriangleLabel, "del")])
+        # Polygons images + maximum limits
+        self.max1 = Button(self.polygonsLimitsFrame, image=self.imgMT)
+        self.labelMax1 = Label(self.polygonsLimitsFrame, text=0)
+        self.max2 = Button(self.polygonsLimitsFrame, image=self.imgST)
+        self.labelMax2 = Label(self.polygonsLimitsFrame, text=0)
+        self.max3 = Button(self.polygonsLimitsFrame, image=self.imgSQ)
+        self.labelMax3 = Label(self.polygonsLimitsFrame, text=0)
+        self.max4 = Button(self.polygonsLimitsFrame, image=self.imgBT)
+        self.labelMax4 = Label(self.polygonsLimitsFrame, text=0)
+        self.max5 = Button(self.polygonsLimitsFrame, image=self.imgP)
+        self.labelMax5 = Label(self.polygonsLimitsFrame, text=0)
 
+        self.progress = ttk.Progressbar(self.window, orient=HORIZONTAL, length=120)
+        self.progress.pack()
+        # to step progress bar up
+        self.progress.config(mode="determinate", maximum=100, value=0)
+        self.progress.step(0)
+        self.progress.stop()
 
+        self.max1.grid(row=1, column=1)
+        self.max2.grid(row=2, column=1)
+        self.max3.grid(row=3, column=1)
+        self.max4.grid(row=4, column=1)
+        self.max5.grid(row=5, column=1)
+        self.labelMax1.grid(row=1, column=2)
+        self.labelMax2.grid(row=2, column=2)
+        self.labelMax3.grid(row=3, column=2)
+        self.labelMax4.grid(row=4, column=2)
+        self.labelMax5.grid(row=5, column=2)
 
+        # + or - buttons
+        self.plusButton4 = Button(self.numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER,
+                                  command=lambda: [self.polygon_action("bt", self.bigTriangleLabel, "add")])
+        self.bigTriangleLabel = Label(self.numPolygonsFrame, text=0, fg="dark green")
+        self.bigTriangleLabel.tag = 'bt'
+        self.labels.append(self.bigTriangleLabel)
+        self.minusButton4 = Button(self.numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER,
+                                   command=lambda: [self.polygon_action("bt", self.bigTriangleLabel, "del")])
 
+        self.plusButton5 = Button(self.numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER,
+                                  command=lambda: [self.polygon_action("p", self.parallelogramLabel, "add")])
+        self.parallelogramLabel = Label(self.numPolygonsFrame, text=0, fg="dark green")
+        self.parallelogramLabel.tag = 'p'
+        self.labels.append(self.parallelogramLabel)
+        self.minusButton5 = Button(self.numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER,
+                                   command=lambda: [self.polygon_action("p", self.parallelogramLabel, "del")])
 
+        self.plusButton1 = Button(self.numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER,
+                                  command=lambda: [self.polygon_action("mt", self.medTriangleLabel, "add")])
+        self.medTriangleLabel = Label(self.numPolygonsFrame, text=0, fg="dark green")
+        self.medTriangleLabel.tag = 'mt'
+        self.labels.append(self.medTriangleLabel)
+        self.minusButton1 = Button(self.numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER,
+                                   command=lambda: [self.polygon_action("mt", self.medTriangleLabel, "del")])
 
-# + or - buttons placement
+        self.plusButton3 = Button(self.numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER,
+                                  command=lambda: [self.polygon_action("s", self.squareLabel, "add")])
+        self.squareLabel = Label(self.numPolygonsFrame, text=0, fg="dark green")
+        self.squareLabel.tag = 's'
+        self.labels.append(self.squareLabel)
+        self.minusButton3 = Button(self.numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER,
+                                   command=lambda: [self.polygon_action("s", self.squareLabel, "del")])
 
-plusButton1.grid(row=1, column=1)
-medTriangleLabel.grid(row=1, column=2)
-minusButton1.grid(row=1, column=3)
+        self.plusButton2 = Button(self.numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER,
+                                  command=lambda: [self.polygon_action("st", self.smallTriangleLabel, "add")])
+        self.smallTriangleLabel = Label(self.numPolygonsFrame, text=0, fg="dark green")
+        self.smallTriangleLabel.tag = 'st'
+        self.labels.append(self.smallTriangleLabel)
+        self.minusButton2 = Button(self.numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER,
+                                   command=lambda: [self.polygon_action("st", self.smallTriangleLabel, "del")])
 
-plusButton2.grid(row=2, column=1)
-smallTriangleLabel.grid(row=2, column=2)
-minusButton2.grid(row=2, column=3)
+        # + or - buttons placement
 
-plusButton3.grid(row=3, column=1)
-squareLabel.grid(row=3, column=2)
-minusButton3.grid(row=3, column=3)
+        self.plusButton1.grid(row=1, column=1)
+        self.medTriangleLabel.grid(row=1, column=2)
+        self.minusButton1.grid(row=1, column=3)
 
-plusButton4.grid(row=4, column=1)
-bigTriangleLabel.grid(row=4, column=2)
-minusButton4.grid(row=4, column=3)
+        self.plusButton2.grid(row=2, column=1)
+        self.smallTriangleLabel.grid(row=2, column=2)
+        self.minusButton2.grid(row=2, column=3)
 
-plusButton5.grid(row=5, column=1)
-parallelogramLabel.grid(row=5, column=2)
-minusButton5.grid(row=5, column=3)
+        self.plusButton3.grid(row=3, column=1)
+        self.squareLabel.grid(row=3, column=2)
+        self.minusButton3.grid(row=3, column=3)
 
-# Buttons and Slider placement
-magnetSlider = Scale(magnetFrame, from_=5, to=100, length=150, resolution=5, orient=HORIZONTAL, width=20)
-magnetSlider.grid(row=0, column=0)
+        self.plusButton4.grid(row=4, column=1)
+        self.bigTriangleLabel.grid(row=4, column=2)
+        self.minusButton4.grid(row=4, column=3)
 
-btn_validate = Button(commandFrame, text="Validate", command=lambda:[transformCoord()])
-btn_validate.grid(row=1, column=1)
+        self.plusButton5.grid(row=5, column=1)
+        self.parallelogramLabel.grid(row=5, column=2)
+        self.minusButton5.grid(row=5, column=3)
 
-btn_reset = Button(commandFrame, text="  Reset  ", command=lambda:[reset_canvas()])
-btn_reset.grid(row=1, column=2)
+        # Buttons and Slider placement
+        self.magnetSlider = Scale(self.magnetFrame, from_=10, to=100, length=150, resolution=5, orient=HORIZONTAL, width=20)
+        self.magnetSlider.grid(row=0, column=0)
 
-# Updates polygons limits with program constants
-getPolygonsLimits()
+        self.btn_validate = Button(self.commandFrame, text="Validate", command=lambda: [self.transformCoord()])
+        self.btn_validate.grid(row=1, column=1)
 
-# Run the main loop:
-window.mainloop()
+        self.btn_reset = Button(self.commandFrame, text="  Reset  ", command=lambda: [utils.reset_canvas(self.drawing_place, self.labels)])
+        self.btn_reset.grid(row=1, column=2)
+
+        # Updates polygons limits with program constants
+        self.getPolygonsLimits()
+
+    def start(self):
+        # Run the main loop:
+        self.window.mainloop()

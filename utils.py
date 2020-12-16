@@ -2,6 +2,7 @@ import math
 from shapely.geometry import Polygon
 from shapely.ops import cascaded_union
 from random import uniform
+import matplotlib.pyplot as plt
 
 
 # Compute margin error %
@@ -52,15 +53,15 @@ def get_square_points(x, y, rotation, size):
 def get_parallelogram_points(x, y, rotation, size):
     if rotation <= 3:
         return [[x, y],
-                rotate_by(x, y, x+size, y+size, rotation),
-                rotate_by(x, y, x+size, y+3*size , rotation),
-                rotate_by(x, y, x, y+2*size , rotation)]
+                rotate_by(x, y, x + size, y + size, rotation),
+                rotate_by(x, y, x + size, y + 3 * size, rotation),
+                rotate_by(x, y, x, y + 2 * size, rotation)]
     # flip parallelogram
     else:
         return [[x, y],
-                rotate_by(x, y, x-size, y+size, rotation),
-                rotate_by(x, y, x-size, y+3*size, rotation),
-                rotate_by(x, y, x, y+2*size, rotation)]
+                rotate_by(x, y, x - size, y + size, rotation),
+                rotate_by(x, y, x - size, y + 3 * size, rotation),
+                rotate_by(x, y, x, y + 2 * size, rotation)]
 
 
 # Function which evaluate how good the shapes overlap the reference
@@ -75,7 +76,6 @@ def fit_function(state, ref):
 
 # Get polygon depending on the
 def get_shape_polygon_by_index(shapes, index, x, y, r, point_index):
-
     offset = 0.005
     unit = 1
     side = math.sqrt(unit * 2)
@@ -125,6 +125,8 @@ def get_corner_count_by_index(shapes, index):
 def get_rot_by_index(shapes, index):
     if shapes[index] == "s":
         return 2
+    elif shapes[index] == "p":
+        return 4
     else:
         return 8
 
@@ -140,7 +142,7 @@ def divide_coords(coords, value):
     output = []
     if coords:
         for coord in coords:
-            output.append(coord/value)
+            output.append(coord / value)
 
         return output
 
@@ -159,10 +161,9 @@ def random_float(_type, canvas_side):
 
 
 def find_nearest(shapes, x, y):
-
     for shape in shapes:
         for x2, y2 in shape:
-            if distance([x, y], [x2, y2]) < 1/100:
+            if distance([x, y], [x2, y2]) < 1 / 100:
                 return [x2, y2]
     return [x, y]
 
@@ -171,7 +172,7 @@ def distance(p1, p2):
     """ Returns the euclidean distance between two points if they exist"""
 
     if p1 and p2:
-        return math.sqrt((p2[0] - p1[0])**2+(p2[1] - p1[1])**2)
+        return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
     else:
         return -1
 
@@ -194,7 +195,7 @@ def is_nearby(movingFigure, drawing_place, magnetSlider):
 
     while k <= size:
         temp = get_xy_head(movingCoords[k:])  # takes two first coord of movingCoords list from index k
-        k = k+2
+        k = k + 2
         j = 0
         while j <= size2:
             j = j + 1
@@ -202,7 +203,7 @@ def is_nearby(movingFigure, drawing_place, magnetSlider):
                 fix = fig
                 l = 0
                 while l < len(fig):
-                    l = l+2
+                    l = l + 2
                     cut = get_xy_head(fix)
                     fix = fix[2:]
                     # checks if current point 'cut' is close enough to the moving figure point
@@ -220,3 +221,105 @@ def get_xy_head(_list):
             if len(temp) == 2:
                 return temp
 
+
+def round_coords(coords):
+    output = []
+    for coord in coords:
+        output.append(round(coord))
+
+    return output
+
+
+# Function to show results
+def draw_node(shapes, state, ref):
+    plt.figure()
+
+    multipolygon = []
+    if not isinstance(ref, Polygon):
+        multipolygon = list(ref)
+    else:
+        multipolygon = [ref]
+
+    # Convert check multipolygon and convert it into list of polygon
+    for sub_ref in multipolygon:
+        xs, ys = sub_ref.exterior.xy
+        plt.plot(xs, ys)
+
+    for i, shape in enumerate(state):
+        polygon = get_shape_polygon_by_index(shapes, i, shape[0], shape[1], shape[2], shape[3])
+
+        xs, ys = polygon.exterior.xy
+
+        plt.plot(xs, ys)
+
+    plt.gca().set_aspect('equal', 'datalim')
+    plt.gca().invert_yaxis()
+    plt.show()  # if you need...
+
+    return
+
+
+def enable_validate_button(btn_validate, enable):
+    """ Disables validate button to let AI work """
+
+    if enable:
+        btn_validate['state'] = "normal"
+    else:
+        btn_validate['state'] = "disabled"
+
+
+def reset_canvas(drawing_place, labels):
+    """ Resets canvas and labels when user clicks on Reset Button """
+
+    figures = drawing_place.find_all()
+    for fig in figures:
+        drawing_place.delete(fig)
+
+    for label in labels:
+        label["text"] = "0"
+
+
+def update_count_label(label, action, drawing_place=None, labels=None):
+    """ Updates the count of a label """
+
+    str_count = label["text"]
+    count = int(str_count)
+
+    if action == "+":
+        label["text"] = str(count + 1)
+    elif action == "-":
+        label["text"] = str(count - 1)
+    elif action == "reset":
+        reset_canvas(drawing_place, labels)
+
+
+def tuple_to_list(_tuple):
+    """ Returns the list version of the tuple sent """
+    return list(_tuple)
+
+
+def replace(original, change):
+    """ Calculates new polygon points after a matching point has been found in isNearby() """
+
+    if original and change:
+        diff = [change[0][0] - change[1][0], change[0][1] - change[1][1]]
+        new = []
+        placed = 0
+        for i, p in enumerate(original):
+            if p == change[0][0]:
+                if original[i + 1] == change[0][1]:
+                    new.append(change[1][0])
+                    new.append(change[1][1])
+                    placed = i + 2
+                else:
+                    new.append(p - diff[0]) if i % 2 == 0 else new.append(p - diff[1])
+            else:
+                new.append(p - diff[0]) if i % 2 == 0 else new.append(p - diff[1])
+
+        new.pop(placed)
+        return new
+
+
+def random_color():
+    import random
+    return "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])

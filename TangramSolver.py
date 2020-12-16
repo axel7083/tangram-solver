@@ -1,7 +1,6 @@
 import copy
-import matplotlib.pyplot as plt
-from shapely.geometry import Polygon
 import utils
+from shapely.geometry import Polygon, LineString
 
 
 class TangramSolver:
@@ -11,6 +10,7 @@ class TangramSolver:
     width = 20
     height = 20
     global_size = 1
+    output = []
 
     # Constructor
     def __init__(self, coordinates, shapes, width=20, height=20, global_size=1):
@@ -19,28 +19,6 @@ class TangramSolver:
         self.width = width
         self.height = height
         self.global_size = global_size
-
-    # "Debug" function to represent a state
-    def draw_node(self, state, ref):
-        plt.figure()
-
-        multipolygon = []
-        if not isinstance(ref, Polygon):
-            multipolygon = list(ref)
-        else:
-            multipolygon = [ref]
-
-        # Convert check multipolygon and convert it into list of polygon
-        for sub_ref in multipolygon:
-            xs, ys = sub_ref.exterior.xy
-            plt.plot(xs, ys)
-
-        for i, shape in enumerate(state):
-            polygon = utils.get_shape_polygon_by_index(self.shapes, i, shape[0], shape[1], shape[2], shape[3])
-
-            xs, ys = polygon.exterior.xy
-
-            plt.plot(xs, ys)
 
     # Exploring the corners
     def corner_explore(self, ref, shape_index, state):
@@ -52,6 +30,10 @@ class TangramSolver:
 
         # Convert check multipolygon and convert it into list of polygon
         for sub_ref in multipolygon:
+
+            if isinstance(sub_ref, LineString):
+                continue
+
             for i in range(len(sub_ref.exterior.xy[0])):
 
                 x = sub_ref.exterior.xy[0][i]
@@ -68,7 +50,7 @@ class TangramSolver:
                         # new_ref = fit_function(state, ref)
                         diff = ref.difference(poly)
 
-                        if utils.margin_error(diff.area, ref.area - poly.area) < 0.5:
+                        if utils.margin_error(diff.area, ref.area - poly.area) < 0.35:
                             # if int(ref.area - poly.area) == int(diff.area):
                             # print("We found a shape which fit ")
                             if shape_index == len(self.shapes) - 1:
@@ -90,10 +72,7 @@ class TangramSolver:
 
         if is_success:
             print("Success")
-            self.draw_node(final_shapes, self.coordinates)
-            plt.gca().set_aspect('equal', 'datalim')
-            plt.gca().invert_yaxis()
-            plt.show()  # if you need...
+            return self.shapes, final_shapes, self.coordinates
         else:
             print("Error")
 
