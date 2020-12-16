@@ -14,6 +14,7 @@ def main():
     tangram_solver = TangramSolver(original, ["bt", "bt", "p", "mt", "s", "st", "st"])
     tangram_solver.execute()
 
+
     """
     head = Polygon([
         [2 - math.sqrt(2), 2 + math.sqrt(2)],  # D

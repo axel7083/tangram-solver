@@ -8,11 +8,11 @@ from TangramSolver import TangramSolver
 # Constants
 import utils
 
-MAX_MED_TRIANGLE = 50
-MAX_SM_TRIANGLE = 50
-MAX_SQUARE = 50
-MAX_BIG_TRIANGLE = 50
-MAX_PARALLELOGRAM = 50
+MAX_MED_TRIANGLE = 2
+MAX_SM_TRIANGLE = 4
+MAX_SQUARE = 3
+MAX_BIG_TRIANGLE = 2
+MAX_PARALLELOGRAM = 8
 CANVAS_SIDE = 700
 
 
@@ -566,8 +566,22 @@ def resetCanvas():
     for label in labels:
         label["text"] = "0"
 
+def getPolygonsLimits():
+    """ Updates at initialization, labels for polygons limits """
 
+    labelMax1["text"] = str(MAX_MED_TRIANGLE)
+    labelMax2["text"] = str(MAX_SM_TRIANGLE)
+    labelMax3["text"] = str(MAX_SQUARE)
+    labelMax4["text"] = str(MAX_BIG_TRIANGLE)
+    labelMax5["text"] = str(MAX_PARALLELOGRAM)
 
+def mode_validate_button(currState):
+    """ Disables validate button to let AI work """
+
+    if currState == "disabled":
+        btn_validate['state'] = "normal"
+    else:
+        btn_validate['state'] = "disabled"
 
 
 """ Tkinter objets definitions """
@@ -578,6 +592,8 @@ window.title("Tangram")
 window.iconbitmap("img/tangram_logo.ico")
 window.geometry("1260x800")
 window.scale = 1
+
+labels = []  # Keep track of all polygon's number labels
 
 # -- Canvas & Frame definition
 drawing_place = Canvas(window, width=700, height=700, bg="grey")
@@ -592,12 +608,53 @@ magnetFrame.place(x=40, y=250)
 commandFrame = LabelFrame(window, text="Actions", padx=5, pady=5, labelanchor="nw")
 commandFrame.place(x=70, y=350)
 
+polygonsLimitsFrame = LabelFrame(window, text="Polygon's limits", padx=5, pady=5, labelanchor="nw")
+polygonsLimitsFrame.place(x=70, y=500)
 
-#imgMT = PhotoImage(file='img/MT.PNG')
-#button = Button(numPolygonsFrame, image=imgMT)
-#button.grid(row=1, column=4)
 
-labels = []  # Keep track of all polygon's number labels
+# Polygons images next to + _ - buttons
+imgMT = PhotoImage(file='img/mt.png')
+button = Button(numPolygonsFrame, image=imgMT)
+button.grid(row=1, column=4)
+
+imgST = PhotoImage(file='img/st.png')
+button = Button(numPolygonsFrame, image=imgST)
+button.grid(row=2, column=4)
+
+imgSQ = PhotoImage(file='img/sq.png')
+button = Button(numPolygonsFrame, image=imgSQ)
+button.grid(row=3, column=4)
+
+imgBT = PhotoImage(file='img/bt.png')
+button = Button(numPolygonsFrame, image=imgBT)
+button.grid(row=4, column=4)
+
+imgP = PhotoImage(file='img/p.png')
+button = Button(numPolygonsFrame, image=imgP)
+button.grid(row=5, column=4)
+
+# Polygons images + maximum limits
+max1 = Button(polygonsLimitsFrame, image=imgMT)
+labelMax1 = Label(polygonsLimitsFrame, text=0)
+max2 = Button(polygonsLimitsFrame, image=imgST)
+labelMax2 = Label(polygonsLimitsFrame, text=0)
+max3 = Button(polygonsLimitsFrame, image=imgSQ)
+labelMax3 = Label(polygonsLimitsFrame, text=0)
+max4 = Button(polygonsLimitsFrame, image=imgBT)
+labelMax4 = Label(polygonsLimitsFrame, text=0)
+max5 = Button(polygonsLimitsFrame, image=imgP)
+labelMax5 = Label(polygonsLimitsFrame, text=0)
+
+max1.grid(row=1, column=1)
+max2.grid(row=2, column=1)
+max3.grid(row=3, column=1)
+max4.grid(row=4, column=1)
+max5.grid(row=5, column=1)
+labelMax1.grid(row=1, column=2)
+labelMax2.grid(row=2, column=2)
+labelMax3.grid(row=3, column=2)
+labelMax4.grid(row=4, column=2)
+labelMax5.grid(row=5, column=2)
 
 # + or - buttons
 plusButton4 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [add_delPolygon("BT", bigTriangleLabel, "add")])
@@ -667,6 +724,8 @@ btn_validate.grid(row=1, column=1)
 btn_reset = Button(commandFrame, text="  Reset  ", command=lambda:[resetCanvas()])
 btn_reset.grid(row=1, column=2)
 
+# Updates polygons limits with program constants
+getPolygonsLimits()
 
 # Run the main loop:
 window.mainloop()
