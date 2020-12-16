@@ -43,6 +43,7 @@ class TangramSolver:
             polygon = utils.get_shape_polygon_by_index(self.shapes, i, shape[0], shape[1], shape[2], shape[3])
 
             xs, ys = polygon.exterior.xy
+
             plt.plot(xs, ys)
 
     # Exploring the corners
@@ -95,6 +96,7 @@ class TangramSolver:
             print("Success")
             self.draw_node(final_shapes, self.coordinates)
             plt.gca().set_aspect('equal', 'datalim')
+            plt.gca().invert_yaxis()
             plt.show()  # if you need...
         else:
             print("Error")

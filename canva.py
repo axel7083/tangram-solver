@@ -1,9 +1,12 @@
+import math
 from tkinter import *
 from math import *
 from tkinter import messagebox
-from random import uniform
+
+import numpy
 from shapely.geometry import Polygon
 from TangramSolver import TangramSolver
+
 
 # Constants
 import utils
@@ -78,10 +81,10 @@ class CanvasPolygon:
     def stop_movement(self, event):
         """ Updates move attribute and sticks the moving polygon to nearby polygon """
 
-        yesCase = is_nearby(self.id)
+        yesCase = utils.is_nearby(self.id, drawing_place, magnetSlider)
         if yesCase:
             self.delete()
-            new_polygon = CanvasPolygon(replace(tuple_to_list(self.coords), tuple_to_list(yesCase)), self.color, self.tag, self.canvas)
+            CanvasPolygon(replace(tuple_to_list(self.coords), tuple_to_list(yesCase)), self.color, self.tag, self.canvas)
 
         self.move = False
 
@@ -139,63 +142,6 @@ class CanvasPolygon:
         print(figure.coords)
 
 
-def is_nearby(movingFigure):
-    """ Returns the closest point to one of moving figure points if in range """
-
-    figures = drawing_place.find_all()  # retrieves all canvas polygons IDs
-
-    coordsFigures = []
-    for id in figures:
-        if id != movingFigure:
-            coordsFigures.append(drawing_place.coords(id))
-
-    movingCoords = drawing_place.coords(movingFigure)  # retrieves moving polygon coordinates
-    size = len(movingCoords)
-    size2 = len(coordsFigures)
-    temp = []
-    k = 0
-
-    while k <= size:
-        temp = twoFirst(movingCoords[k:])  # takes two first coord of movingCoords list from index k
-        k = k+2
-        j = 0
-        while j <= size2:
-            j = j + 1
-            for fig in coordsFigures:
-                fix = fig
-                l = 0
-                while l < len(fig):
-                    l = l+2
-                    cut = twoFirst(fix)
-                    fix = fix[2:]
-                    # checks if current point 'cut' is close enough to the moving figure point
-                    if euclideanDistance(temp, cut) <= magnetSlider.get() and euclideanDistance(temp, cut) != -1:
-                        return temp, cut
-
-
-
-
-def twoFirst(list):
-    """ Returns the two first element of a list """
-
-    temp = []
-    if list:
-        for item in list:
-            temp.append(item)
-            if(len(temp) == 2):
-                return temp
-
-
-
-def euclideanDistance(p1, p2):
-    """ Returns the euclidean distance between two points if they exist"""
-
-    if p1 and p2:
-        return sqrt((p2[0] - p1[0])**2+(p2[1] - p1[1])**2)
-    else:
-        return -1
-
-
 def replace(original, change):
     """ Calculates new polygon points after a matching point has been found in isNearby() """
 
@@ -224,167 +170,33 @@ def tuple_to_list(tuple):
     return list(tuple)
 
 
-def add_delPolygon(type, label, action):
+def get_settings_by_type(_type, x, y):
+
+    unit = 100
+    side = math.sqrt(2)*100
+
+    if _type == "bt":
+        return MAX_BIG_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, unit * 2)).flatten().tolist(), "green"
+    elif _type == "p":
+        return MAX_PARALLELOGRAM, numpy.array(utils.get_parallelogram_points(x, y, 0, side / 2)).flatten().tolist(), "indian red"
+    elif _type == "mt":
+        return MAX_MED_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, side)).flatten().tolist(), "red"
+    elif _type == "s":
+        return MAX_SQUARE, numpy.array(utils.get_square_points(x, y, 0, unit)).flatten().tolist(), "pink"
+    elif _type == "st":
+        return MAX_SM_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, unit)).flatten().tolist(), "orange"
+
+
+def polygon_action(_type, label, action):
     """ Add or Delete polygons of the canvas depending on what button the user clicked on """
 
-    if type == "MT":
-        if action == "add":
-            if label_value(label)+1 <= MAX_MED_TRIANGLE and label_value(label) >= 0:
-                overlap, iter = True, 0
-                while overlap:
-                    if iter < 1000:
-                        iter += 1
-                        x, y = randfloatinRange(type)
-                        mt3 = CanvasPolygon((x, y, x + 100 * sqrt(2), y, x, y + 100 * sqrt(2)), 'red', "MT", drawing_place)
-                        if isPolygonOverlapping(mt3.id, type):
-                            overlap = False
-                            update_count_label(label, "+")
-                        else:
-                            drawing_place.delete(mt3.id)
-                    else:
-                        overlap = False
-                        messagebox.showerror("Upps", "It looks like there is no place left on the canvas...")
-
-            else:
-                messagebox.showerror("Capacity limit", "You've reached the maximum amount of Medium Triangles")
-
-        elif action == "del":
-            if label_value(label) > 0:
-                delPolygon("MT")
-                update_count_label(label, "-")
-            else:
-                messagebox.showinfo("Minimum reached", "You've already reached the minimum amount of Medium Triangles")
+    if action == "add":
+        create_polygon(_type, label)
+    elif action == "del":
+        delete_polygon(_type, label)
 
 
-
-    elif type == "ST":
-        if action == "add":
-            if label_value(label)+1 <= MAX_SM_TRIANGLE and label_value(label) >= 0:
-                overlap, iter = True, 0
-                while overlap:
-                    if iter < 1000:
-                        iter += 1
-                        x, y = randfloatinRange(type)
-                        sm1 = CanvasPolygon((x, y , x + 100, y, x, y + 100), 'orange', "ST", drawing_place)
-                        if isPolygonOverlapping(sm1.id, type):
-                            overlap = False
-                            update_count_label(label, "+")
-                        else:
-                            drawing_place.delete(sm1.id)
-                    else:
-                        overlap = False
-                        messagebox.showerror("Upps", "It looks like there is no place left on the canvas...")
-
-            else:
-                messagebox.showerror("Capacity limit", "You've reached the maximum amount of Small Triangles")
-
-        elif action == "del":
-            if label_value(label) > 0:
-                delPolygon("ST")
-                update_count_label(label, "-")
-            else:
-                messagebox.showinfo("Minimum reached", "You've already reached the minimum amount of Small Triangles")
-
-
-    elif type == "S":
-        if action == "add":
-            if label_value(label)+1 <= MAX_SQUARE and label_value(label) >= 0:
-                overlap, iter = True, 0
-                while overlap:
-                    if iter < 1000:
-                        iter += 1
-                        x, y = randfloatinRange(type)
-                        sq = CanvasPolygon((x, y, x + 100, y, x + 100, y + 100, x, y + 100), 'pink', "S", drawing_place)
-                        if isPolygonOverlapping(sq.id, type):
-                            overlap = False
-                            update_count_label(label, "+")
-                        else:
-                            drawing_place.delete(sq.id)
-                    else:
-                        overlap = False
-                        messagebox.showerror("Upps", "It looks like there is no place left on the canvas...")
-            else:
-                messagebox.showerror("Capacity limit", "You've reached the maximum amount of Squares")
-
-        elif action == "del":
-            if label_value(label) > 0:
-                delPolygon("S")
-                update_count_label(label, "-")
-            else:
-                messagebox.showinfo("Minimum reached", "You've already reached the minimum amount of Squares")
-
-
-    elif type == "BT":
-        if action == "add":
-            if label_value(label)+1 <= MAX_BIG_TRIANGLE and label_value(label) >= 0:
-                overlap, iter = True, 0
-                while overlap:
-                    if iter < 1000:
-                        iter += 1
-                        x, y = randfloatinRange(type)
-                        bt = CanvasPolygon((x, y, x + 200, y, x, y + 200), 'green', "BT", drawing_place)
-                        if isPolygonOverlapping(bt.id, type):
-                            overlap = False
-                            update_count_label(label, "+")
-                        else:
-                            drawing_place.delete(bt.id)
-                    else:
-                        overlap = False
-                        messagebox.showerror("Upps", "It looks like there is no place left on the canvas...")
-            else:
-                messagebox.showerror("Capacity limit", "You've reached the maximum amount of Big Triangles")
-
-        elif action == "del":
-            if label_value(label) > 0:
-                delPolygon("BT")
-                update_count_label(label, "-")
-            else:
-                messagebox.showinfo("Minimum reached", "You've already reached the minimum amount of Big Triangles")
-
-
-    elif type == "P":
-        if action == "add":
-            if label_value(label)+1 <= MAX_PARALLELOGRAM and label_value(label) >= 0:
-                overlap, iter = True, 0
-                while overlap:
-                    if iter < 1000:
-                        iter += 1
-                        x, y = randfloatinRange(type)
-                        p = CanvasPolygon((x, y, x + 141.08, y, x + 212.13, y + 71.05, x + 70.71, y + 71.05), 'indian red', "P", drawing_place)
-                        if isPolygonOverlapping(p.id, type):
-                            overlap = False
-                            update_count_label(label, "+")
-                        else:
-                            drawing_place.delete(p.id)
-                    else:
-                        overlap = False
-                        messagebox.showerror("Upps", "It looks like there is no place left on the canvas...")
-
-            else:
-                messagebox.showerror("Capacity limit", "You've reached the maximum amount of Parallelograms")
-
-        elif action == "del":
-            if label_value(label) > 0:
-                delPolygon("P")
-                update_count_label(label, "-")
-            else:
-                messagebox.showinfo("Minimum reached", "You've already reached the minimum amount of Parallelograms")
-
-
-def randfloatinRange(type):
-    """ Returns a random float depending on the polygon type """
-
-    if type == "MT":
-        return uniform(0, CANVAS_SIDE - 100 * sqrt(2)), uniform(0, CANVAS_SIDE - 100 * sqrt(2))
-    elif type == "ST" or type == "S":
-        return uniform(0, CANVAS_SIDE - 100), uniform(0, CANVAS_SIDE - 100)
-    elif type == "BT":
-        return uniform(0, CANVAS_SIDE - 200), uniform(0, CANVAS_SIDE - 200)
-    elif type == "P":
-        return uniform(0, CANVAS_SIDE - 212.13), uniform(0, CANVAS_SIDE - 212.13)
-
-
-def update_count_label(label,action):
+def update_count_label(label, action):
     """ Updates the count of a label """
 
     str_count = label["text"]
@@ -395,66 +207,44 @@ def update_count_label(label,action):
     elif action == "-":
         label["text"] = str(count - 1)
     elif action == "reset":
-        resetCanvas()
-
+        reset_canvas()
 
 
 def label_value(label):
     """ Converts label text to int """
-
     return int(label["text"])
 
-def delPolygon(type):
+
+def create_polygon(_type, label):
+    x = CANVAS_SIDE / 2
+    y = CANVAS_SIDE / 2
+    _max, coords, color = get_settings_by_type(_type, x, y)
+
+    if label_value(label) + 1 <= _max and label_value(label) >= 0:
+        # Creating a new Polygon
+        CanvasPolygon(coords, color, _type, drawing_place)
+        update_count_label(label, "+")
+    else:
+        messagebox.showerror("Maximum reach", "You've reached the maximum amount of this item.")
+
+
+def delete_polygon(_type, label):
     """ Deletes polygon that has for tag : 'type' """
 
-    figures = drawing_place.find_withtag(type)
+    if label_value(label) > 0:
 
-    if len(figures) == 1:
-        drawing_place.delete(type)
+        figures = drawing_place.find_withtag(_type)
+        _len = len(figures)
+        if _len == 1:
+            drawing_place.delete(_type)
 
-    elif len(figures) > 1:
-        result = tuple_to_list(figures)
-        drawing_place.delete(result[0])
+        elif _len > 1:
+            result = tuple_to_list(figures)
+            drawing_place.delete(result[_len-1])
 
-
-def isPolygonOverlapping(id, type):
-    """ Checks if the last polygon created is overlapping other polygons """
-
-    figures = drawing_place.find_all()
-    if len(figures) > 1:
-        overResult = []
-        for fig in figures:
-            if fig != id:
-                coords = tuple_to_list(drawing_place.coords(fig))
-                if type == "P":
-                    result = tuple_to_list(drawing_place.find_overlapping(coords[0], coords[1], coords[4], coords[5]))
-
-                    if id in result:
-                        overResult.append(1)
-                    else:
-                        overResult.append(0)
-
-                elif type == "S":
-                    result = tuple_to_list(drawing_place.find_overlapping(coords[0], coords[1], coords[4], coords[5]))
-                    if id in result:
-                        overResult.append(1)
-                    else:
-                        overResult.append(0)
-
-                else:
-                    result = tuple_to_list(drawing_place.find_overlapping(coords[2], coords[3], coords[4], coords[5]))
-                    if id in result:
-                        overResult.append(1)
-                    else:
-                        overResult.append(0)
-
-        if 1 in overResult:
-            return False
-        else:
-            return True
-
+        update_count_label(label, "-")
     else:
-        return True
+        messagebox.showerror("Minimum reach", "You've reached the minimum amount of this item.")
 
 
 def transformCoord():
@@ -466,7 +256,7 @@ def transformCoord():
     if len(figures) >= 1:
         for fig in figures:
             tags.append(drawing_place.gettags(fig))
-            coords.append(divideBy100(tuple_to_list(drawing_place.coords(fig))))
+            coords.append(utils.divide_coords(tuple_to_list(drawing_place.coords(fig)), 100))
 
         types = getTypeofPolygons()
 
@@ -474,7 +264,7 @@ def transformCoord():
         for shape in coords:
             poly = []
             for i in range(int(len(shape) / 2)):
-                poly.append(find_nearest(coordinates, round(shape[i * 2], 3), round(shape[i * 2 + 1], 3)))
+                poly.append(utils.find_nearest(coordinates, round(shape[i * 2], 3), round(shape[i * 2 + 1], 3)))
                 # poly.append([shape[i * 2], shape[i * 2 + 1]])
 
             coordinates.append(poly)
@@ -487,7 +277,6 @@ def transformCoord():
 
         # Output can be polygon OR multipolygon
         output = utils.merge(polygons)
-
 
         multipolygon = []
         if not isinstance(output, Polygon):
@@ -522,17 +311,6 @@ def solve(original, types):
     tangram_solver.execute()
 
 
-
-def find_nearest(shapes, x, y):
-
-    for shape in shapes:
-        for x2, y2 in shape:
-            if euclideanDistance([x, y], [x2, y2]) < 1/100:
-                return [x2, y2]
-
-    return [x, y]
-
-
 def getTypeofPolygons():
     """ Gets canvas polygons types """
 
@@ -544,19 +322,7 @@ def getTypeofPolygons():
     return types
 
 
-
-def divideBy100(coords):
-    """ Divides by 100 all coordinates in order to fit real sizes """
-
-    realCoords = []
-    if(coords):
-        for coord in coords:
-            realCoords.append(coord/100)
-
-        return realCoords
-
-
-def resetCanvas():
+def reset_canvas():
     """ Resets canvas and labels when user clicks on Reset Button """
 
     figures = drawing_place.find_all()
@@ -593,42 +359,42 @@ commandFrame = LabelFrame(window, text="Actions", padx=5, pady=5, labelanchor="n
 commandFrame.place(x=70, y=350)
 
 
-#imgMT = PhotoImage(file='img/MT.PNG')
-#button = Button(numPolygonsFrame, image=imgMT)
-#button.grid(row=1, column=4)
+# imgMT = PhotoImage(file='img/MT.PNG')
+# button = Button(numPolygonsFrame, image=imgMT)
+# button.grid(row=1, column=4)
 
 labels = []  # Keep track of all polygon's number labels
 
 # + or - buttons
-plusButton4 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [add_delPolygon("BT", bigTriangleLabel, "add")])
+plusButton4 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("bt", bigTriangleLabel, "add")])
 bigTriangleLabel = Label(numPolygonsFrame, text=0, fg="dark green")
 bigTriangleLabel.tag = 'bt'
 labels.append(bigTriangleLabel)
-minusButton4 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [add_delPolygon("BT", bigTriangleLabel, "del")])
+minusButton4 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("bt", bigTriangleLabel, "del")])
 
-plusButton5 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [add_delPolygon("P", parallelogramLabel, "add")])
+plusButton5 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("p", parallelogramLabel, "add")])
 parallelogramLabel = Label(numPolygonsFrame, text=0, fg="dark green")
 parallelogramLabel.tag = 'p'
 labels.append(parallelogramLabel)
-minusButton5 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [add_delPolygon("P", parallelogramLabel, "del")])
+minusButton5 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("p", parallelogramLabel, "del")])
 
-plusButton1 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [add_delPolygon("MT", medTriangleLabel, "add")])
+plusButton1 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("mt", medTriangleLabel, "add")])
 medTriangleLabel = Label(numPolygonsFrame, text=0, fg="dark green")
 medTriangleLabel.tag = 'mt'
 labels.append(medTriangleLabel)
-minusButton1 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [add_delPolygon("MT", medTriangleLabel, "del")])
+minusButton1 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("mt", medTriangleLabel, "del")])
 
-plusButton3 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [add_delPolygon("S", squareLabel, "add")])
+plusButton3 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("s", squareLabel, "add")])
 squareLabel = Label(numPolygonsFrame, text=0, fg="dark green")
 squareLabel.tag = 's'
 labels.append(squareLabel)
-minusButton3 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [add_delPolygon("S", squareLabel, "del")])
+minusButton3 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("s", squareLabel, "del")])
 
-plusButton2 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [add_delPolygon("ST", smallTriangleLabel, "add")])
+plusButton2 = Button(numPolygonsFrame, text="+", fg="green", width=3, justify=CENTER, command=lambda: [polygon_action("st", smallTriangleLabel, "add")])
 smallTriangleLabel = Label(numPolygonsFrame, text=0, fg="dark green")
 smallTriangleLabel.tag = 'st'
 labels.append(smallTriangleLabel)
-minusButton2 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [add_delPolygon("ST", smallTriangleLabel, "del")])
+minusButton2 = Button(numPolygonsFrame, text="-", fg="red", width=3, justify=CENTER, command=lambda: [polygon_action("st", smallTriangleLabel, "del")])
 
 
 
@@ -664,7 +430,7 @@ magnetSlider.grid(row=0, column=0)
 btn_validate = Button(commandFrame, text="Validate", command=lambda:[transformCoord()])
 btn_validate.grid(row=1, column=1)
 
-btn_reset = Button(commandFrame, text="  Reset  ", command=lambda:[resetCanvas()])
+btn_reset = Button(commandFrame, text="  Reset  ", command=lambda:[reset_canvas()])
 btn_reset.grid(row=1, column=2)
 
 

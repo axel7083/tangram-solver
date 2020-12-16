@@ -1,13 +1,13 @@
 import math
 from shapely.geometry import Polygon
 from shapely.ops import cascaded_union
+from random import uniform
 
 
 # Compute margin error %
 def margin_error(ref, value):
     if ref == 0:
         return abs(value)
-    # print(str(ref) + " vs " + str(value))
     return (abs(value - ref) / ref) * 100
 
 
@@ -132,3 +132,91 @@ def get_rot_by_index(shapes, index):
 # Merge a list of polygons into one
 def merge(polygons):
     return cascaded_union(polygons)
+
+
+def divide_coords(coords, value):
+    """ Divides by value all coordinates"""
+
+    output = []
+    if coords:
+        for coord in coords:
+            output.append(coord/value)
+
+        return output
+
+
+def random_float(_type, canvas_side):
+    """ Returns a random float depending on the polygon type """
+
+    if _type == "MT":
+        return uniform(0, canvas_side - 100 * math.sqrt(2)), uniform(0, canvas_side - 100 * math.sqrt(2))
+    elif _type == "ST" or _type == "S":
+        return uniform(0, canvas_side - 100), uniform(0, canvas_side - 100)
+    elif _type == "BT":
+        return uniform(0, canvas_side - 200), uniform(0, canvas_side - 200)
+    elif _type == "P":
+        return uniform(0, canvas_side - 212.13), uniform(0, canvas_side - 212.13)
+
+
+def find_nearest(shapes, x, y):
+
+    for shape in shapes:
+        for x2, y2 in shape:
+            if distance([x, y], [x2, y2]) < 1/100:
+                return [x2, y2]
+    return [x, y]
+
+
+def distance(p1, p2):
+    """ Returns the euclidean distance between two points if they exist"""
+
+    if p1 and p2:
+        return math.sqrt((p2[0] - p1[0])**2+(p2[1] - p1[1])**2)
+    else:
+        return -1
+
+
+def is_nearby(movingFigure, drawing_place, magnetSlider):
+    """ Returns the closest point to one of moving figure points if in range """
+
+    figures = drawing_place.find_all()  # retrieves all canvas polygons IDs
+
+    coordsFigures = []
+    for id in figures:
+        if id != movingFigure:
+            coordsFigures.append(drawing_place.coords(id))
+
+    movingCoords = drawing_place.coords(movingFigure)  # retrieves moving polygon coordinates
+    size = len(movingCoords)
+    size2 = len(coordsFigures)
+    temp = []
+    k = 0
+
+    while k <= size:
+        temp = get_xy_head(movingCoords[k:])  # takes two first coord of movingCoords list from index k
+        k = k+2
+        j = 0
+        while j <= size2:
+            j = j + 1
+            for fig in coordsFigures:
+                fix = fig
+                l = 0
+                while l < len(fig):
+                    l = l+2
+                    cut = get_xy_head(fix)
+                    fix = fix[2:]
+                    # checks if current point 'cut' is close enough to the moving figure point
+                    if distance(temp, cut) <= magnetSlider.get() and distance(temp, cut) != -1:
+                        return temp, cut
+
+
+def get_xy_head(_list):
+    """ Returns the two first element of a list """
+
+    temp = []
+    if _list:
+        for item in _list:
+            temp.append(item)
+            if len(temp) == 2:
+                return temp
+
