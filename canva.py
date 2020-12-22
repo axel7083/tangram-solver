@@ -12,14 +12,14 @@ from VerticalScrolledFrame import VerticalScrolledFrame
 
 class TangramCanvas:
 
-    def polygon_action(self, _type, label, action):
+    def polygon_action(self, _type, label, action, coord):
         """ Add or Delete polygons of the canvas depending on what button the user clicked on """
         if action == "add":
             self.create_polygon(_type, label, coord)
         elif action == "del":
             self.delete_polygon(_type, label)
 
-    def create_polygon(self, _type, label):
+    def create_polygon(self, _type, label, coord):
         x = utils.CANVAS_SIDE / 2
         y = utils.CANVAS_SIDE / 2
         _max, coords = utils.get_settings_by_type(_type, x, y)
