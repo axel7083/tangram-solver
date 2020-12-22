@@ -1,5 +1,5 @@
-shapely~=1.7.1
-pytest~=6.2.1
-numpy~=1.18.5
-matplotlib~=3.3.2
-flake8~=3.8.4
+shapely
+pytest
+numpy
+matplotlib
+flake8
