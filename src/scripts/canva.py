@@ -1,7 +1,4 @@
-from tkinter import *
-from tkinter import messagebox
-from tkinter import ttk
-
+from tkinter import messagebox, ttk, Tk, Canvas, LabelFrame, PhotoImage, Button, FLAT, Label, HORIZONTAL, CENTER, Scale
 from shapely.geometry import Polygon
 
 from src.scripts import utils, SolvingThread
@@ -18,14 +15,14 @@ class TangramCanvas:
             self.delete_polygon(_type, label)
 
     def create_polygon(self, _type, label, coord):
-        x = utils.CANVAS_SIDE / 2
-        y = utils.CANVAS_SIDE / 2
-        _max, coords = utils.get_settings_by_type(_type, x, y)
+        x_pos = utils.CANVAS_SIDE / 2
+        y_pos = utils.CANVAS_SIDE / 2
+
         color = utils.random_color()
         if coord == 0:
-            _max, coords = self.get_settings_by_type(_type, x, y)
+            _max, coords = utils.get_settings_by_type(_type, x_pos, y_pos)
 
-            if self.label_value(label) + 1 <= _max and self.label_value(label) >= 0:
+            if utils.label_value(label) + 1 <= _max and utils.label_value(label) >= 0:
                 # Creating a new Polygon
                 CanvasPolygon(coords, color, _type, self.drawing_place, self.magnetSlider)
                 utils.update_count_label(label, "+")
@@ -75,7 +72,6 @@ class TangramCanvas:
             for shape in coords:
                 poly = []
                 for i in range(int(len(shape) / 2)):
-                    # poly.append(utils.find_nearest(coordinates, round(shape[i * 2], 2), round(shape[i * 2 + 1], 2)))
                     poly.append([round(shape[i * 2], 2), round(shape[i * 2 + 1], 2)])
 
                 coordinates.append(poly)
