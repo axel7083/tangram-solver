@@ -1,5 +1,5 @@
 from math import *
-import utils
+from src.scripts import utils
 
 
 class CanvasPolygon:

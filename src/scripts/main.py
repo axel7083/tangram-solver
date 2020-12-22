@@ -1,5 +1,5 @@
 # Main function
-from canva import TangramCanvas
+from src.scripts.canva import TangramCanvas
 
 
 def main():

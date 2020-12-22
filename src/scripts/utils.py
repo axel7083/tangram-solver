@@ -4,6 +4,7 @@ from shapely.ops import cascaded_union
 from random import uniform
 import matplotlib.pyplot as plt
 import numpy
+import json
 
 
 # Constants
@@ -367,3 +368,10 @@ def get_settings_by_type(_type, x, y):
 def label_value(label):
     """ Converts label text to int """
     return int(label["text"])
+
+
+def load_prefabs():
+    """ We avoid hardcoding data so we load it from storage """
+    f = open('../assets/prefabs.json',)
+    data = json.load(f)
+    return data

@@ -1,7 +1,7 @@
 import threading
 from queue import Queue
-import utils
-from TangramSolver import TangramSolver
+from src.scripts import utils
+from src.scripts.TangramSolver import TangramSolver
 from tkinter import messagebox
 from shapely.geos import TopologicalError
 

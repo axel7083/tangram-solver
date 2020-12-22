@@ -4,11 +4,9 @@ from tkinter import ttk
 
 from shapely.geometry import Polygon
 
-import SolvingThread
-import utils
-from CanvasPolygon import CanvasPolygon
-from VerticalScrolledFrame import VerticalScrolledFrame
-
+from src.scripts import utils, SolvingThread
+from src.scripts.CanvasPolygon import CanvasPolygon
+from src.scripts.VerticalScrolledFrame import VerticalScrolledFrame
 
 class TangramCanvas:
 
@@ -55,7 +53,7 @@ class TangramCanvas:
         else:
             messagebox.showerror("Minimum reached", "You've reached the minimum amount of this item.")
 
-    def transformCoord(self):
+    def transform_coords(self):
         """ Sends polygon's coordinates to AI """
 
         figures = self.drawing_place.find_all()
@@ -68,7 +66,7 @@ class TangramCanvas:
                 co.append(utils.tuple_to_list(self.drawing_place.coords(fig)))
                 coords.append(utils.divide_coords(utils.tuple_to_list(self.drawing_place.coords(fig)), 100))
 
-            types = self.getTypeofPolygons()
+            types = self.get_type_polygons()
 
             print(co)
             print(types)
@@ -130,7 +128,7 @@ class TangramCanvas:
     def close_event(self):
         self.window.destroy()
 
-    def getTypeofPolygons(self):
+    def get_type_polygons(self):
         """ Gets canvas polygons types """
 
         types = []
@@ -140,7 +138,7 @@ class TangramCanvas:
 
         return types
 
-    def getPolygonsLimits(self):
+    def get_polygons_limits(self):
         """ Updates at initialization, labels for polygons limits """
 
         self.labelMax1["text"] = str(utils.MAX_MED_TRIANGLE)
@@ -154,77 +152,16 @@ class TangramCanvas:
             if label.tag == _type:
                 return label
 
-    def get_polygons_by_model(self, model):
-        if model == "cat":
-            return ['bt', 'bt', 'p', 'mt', 's', 'st', 'st'],\
-                   [[292.0, 199.0, 221.28932188134524, 269.71067811865476, 221.28932188134524, 128.28932188134524],
-                    [292.0, 199.0, 362.71067811865476, 128.28932188134524, 362.71067811865476, 269.71067811865476],
-                    [221.28932188134524, 269.71067811865476, 292.0, 199.0, 362.71067811865476, 269.71067811865476,
-                     292.0, 340.4213562373095],
-                    [433.4213562373095, 481.842712474619, 291.99999999999994, 623.2640687119285, 292.0,
-                     340.4213562373095],
-                    [192.2979438526968, 440.1234123846127, 292.0, 340.4213562373095, 292.0, 539.8254685319159],
-                    [433.4213562373095, 681.842712474619, 233.4213562373095, 681.842712474619, 433.4213562373095,
-                     481.842712474619],
-                    [433.4213562373095, 681.842712474619, 433.4213562373095, 582.1406563273158, 533.1234123846127,
-                     482.4386001800126, 533.1234123846127, 582.1406563273158]],
-
-        elif model == "swan":
-            return ['bt', 'bt', 'p', 'mt', 's', 'st', 'st'], \
-                   [[262.0, 509.0, 262.0, 309.0, 462.0, 509.0],
-                    [403.4213562373095, 450.4213562373095, 262.0, 309.0, 544.842712474619, 309.0],
-                    [162.2979438526968, 408.7020561473032, 262.0, 309.0, 262.0, 508.4041122946064],
-                    [233.00862197135154, 337.99137802864846, 162.2979438526968, 408.7020561473032, 162.2979438526968,
-                     267.2806999099937],
-                    [162.2979438526968, 267.2806999099937, 233.00862197135154, 196.57002179133895, 303.7193000900063,
-                     267.2806999099937, 233.00862197135154, 337.99137802864846],
-                    [233.2193000900063, 55.7806999099937, 303.7193000900063, 126.2806999099937, 303.7193000900063,
-                     267.2806999099937, 233.2193000900063, 196.7806999099937],
-                    [233.2193000900063, 155.78069990999379, 133.21930009000621, 155.78069990999379, 233.2193000900063,
-                     55.7806999099937]]
-
-        elif model == "hen":
-            return ['bt', 'bt', 'p', 'mt', 's', 'st', 'st'], \
-                   [[364.0, 325.0, 364.0, 525.0, 163.99999999999997, 325.0], [364.0, 325.0, 564.0, 325.0, 364.0, 525.0],
-                    [64.29794385269676, 225.2979438526968, 163.99999999999997, 225.2979438526968, 263.7020561473032,
-                     325.0, 163.99999999999997, 325.0],
-                    [64.29794385269676, 225.2979438526968, 64.29794385269676, 125.29794385269673, 164.2979438526968,
-                     225.2979438526968], [464.0, 225.0, 564.0, 225.0, 564.0, 325.0, 464.0, 325.0],
-                    [563.7020561473032, 125.29794385269673, 663.4041122946064, 225.0, 464.0, 225.0],
-                    [364.0, 525.0, 434.71067811865476, 595.7106781186548, 293.28932188134524, 595.7106781186548]]
-
-        elif model == "square":
-            return ['bt', 'bt', 'p', 'mt', 's', 'st', 'st'], \
-                   [[182.0, 521.0, 40.57864376269043, 662.4213562373095, 40.57864376269046, 379.5786437626905],
-                    [182.0, 521.0, 40.57864376269046, 379.5786437626905, 323.4213562373095, 379.5786437626905],
-                    [182.0, 521.0, 252.71067811865476, 450.28932188134524, 323.4213562373095, 521.0,
-                     252.71067811865476, 591.7106781186548], [252.71067811865476, 450.28932188134524, 323.4213562373095,
-                    379.5786437626905, 323.4213562373095, 521.0],
-                    [40.57864376269043, 662.4213562373095, 111.07864376269043, 591.9213562373095, 252.07864376269043,
-                     591.9213562373095, 181.57864376269043, 662.4213562373095], [323.4213562373095, 662.0,
-                    182.4213562373095, 662.0, 323.4213562373095, 521.0], [182.0, 521.0, 252.71067811865476,
-                    591.7106781186548, 111.28932188134524, 591.7106781186548]]
-
-        elif model == "boat":
-            return ['bt', 'bt', 'p', 'mt', 's', 'st', 'st'], \
-                   [[663.0, 370.0, 592.5, 440.5, 451.49999999999994, 440.50000000000006, 522.0, 370.0],
-                    [522.2106781186548, 511.21067811865476, 451.49999999999994, 440.50000000000006, 592.9213562373094,
-                     440.50000000000006],
-                    [451.49999999999994, 440.50000000000006, 380.7893218813452, 369.7893218813453, 522.2106781186548,
-                     369.7893218813453],
-                    [380.7893218813452, 369.7893218813453, 522.2106781186549, 511.2106781186549, 239.36796564403562,
-                     511.21067811865487],
-                    [239.36796564403562, 511.21067811865487, 97.94660940672611, 369.78932188134536, 380.78932188134513,
-                     369.78932188134536], [327.0, 270.0, 427.0, 270.0, 427.0, 370.0, 327.0, 370.0],
-                    [372.0, 170.0, 471.70205614730327, 269.70205614730327, 272.29794385269673, 269.70205614730327]]
-
-    def models(self, model):
+    def models(self, index):
         """ Puts a puzzle model on the canvas """
 
         utils.reset_canvas(self.drawing_place, self.labels)
-        _type, coords = self.get_polygons_by_model(model)
+
+        _type = self.prefabs[index]['types']
+        coords = self.prefabs[index]['positions']
+
+        # _type, coords = get_polygons_by_model(model)
         for i, coord in enumerate(coords):
-            print(_type[i])
             self.polygon_action(_type[i], self.get_label_by_type(_type[i]), "add", coord)
 
     def __init__(self):
@@ -233,7 +170,7 @@ class TangramCanvas:
         # -- Window definition
         self.window = Tk()
         self.window.title("Tangram")
-        self.window.iconbitmap("src/tangram_logo.ico")
+        self.window.iconbitmap("../images/tangram_logo.ico")
         self.window.geometry("1260x800")
         self.window.resizable(0, 0)
         self.window.scale = 1
@@ -260,45 +197,36 @@ class TangramCanvas:
         self.scframe = VerticalScrolledFrame(self.window)
         self.scframe.place(x=1000, y=20)
 
-        self.squareModel = PhotoImage(file='src/square.PNG')
-        self.button = Button(self.scframe.interior, image=self.squareModel, relief=FLAT,
-                             command=lambda: [self.models("square")])
-        self.button.pack()
-        self.catModel = PhotoImage(file="src/cat.PNG")
-        self.button = Button(self.scframe.interior, image=self.catModel, relief=FLAT,
-                             command=lambda: [self.models("cat")])
-        self.button.pack()
-        self.boatModel = PhotoImage(file="src/boat.PNG")
-        self.button = Button(self.scframe.interior, image=self.boatModel, relief=FLAT,
-                             command=lambda: [self.models("boat")])
-        self.button.pack()
-        self.swanModel = PhotoImage(file="src/swan.PNG")
-        self.button = Button(self.scframe.interior, image=self.swanModel, relief=FLAT,
-                             command=lambda: [self.models("swan")])
-        self.button.pack()
-        self.henModel = PhotoImage(file='src/hen.PNG')
-        self.button = Button(self.scframe.interior, image=self.henModel, relief=FLAT,
-                             command=lambda: [self.models("hen")])
-        self.button.pack()
+        # Load the prefabs in the scrollbar
+        self.prefabs = utils.load_prefabs()
+        self.prefabs_models = []
+        self.prefabs_buttons = []
+
+        for i, elem in enumerate(self.prefabs):
+            print("[" + str(i) + "] Creating " + elem['name'])
+            self.prefabs_models.append(PhotoImage(file='../images/' + elem['name'] + '.PNG'))
+            self.prefabs_buttons.append(Button(self.scframe.interior, image=self.prefabs_models[i], relief=FLAT,
+                            command=lambda opt=i: [self.models(opt)]))
+            self.prefabs_buttons[i].pack()
 
         # Polygons images next to + _ - buttons
-        self.imgMT = PhotoImage(file='src/mt.png')
+        self.imgMT = PhotoImage(file='../images/MT.PNG')
         self.button = Button(self.numPolygonsFrame, image=self.imgMT, state="disabled")
         self.button.grid(row=1, column=4)
 
-        self.imgST = PhotoImage(file='src/st.png')
+        self.imgST = PhotoImage(file='../images/st.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgST, state="disabled")
         self.button.grid(row=2, column=4)
 
-        self.imgSQ = PhotoImage(file='src/sq.png')
+        self.imgSQ = PhotoImage(file='../images/sq.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgSQ, state="disabled")
         self.button.grid(row=3, column=4)
 
-        self.imgBT = PhotoImage(file='src/bt.png')
+        self.imgBT = PhotoImage(file='../images/bt.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgBT, state="disabled")
         self.button.grid(row=4, column=4)
 
-        self.imgP = PhotoImage(file='src/p.png')
+        self.imgP = PhotoImage(file='../images/p.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgP, state="disabled")
         self.button.grid(row=5, column=4)
 
@@ -400,7 +328,7 @@ class TangramCanvas:
                                   width=20)
         self.magnetSlider.grid(row=0, column=0)
 
-        self.btn_validate = Button(self.commandFrame, text="Validate", command=lambda: [self.transformCoord()])
+        self.btn_validate = Button(self.commandFrame, text="Validate", command=lambda: [self.transform_coords()])
         self.btn_validate.grid(row=1, column=1)
 
         self.btn_reset = Button(self.commandFrame, text="  Reset  ",
@@ -408,7 +336,7 @@ class TangramCanvas:
         self.btn_reset.grid(row=1, column=2)
 
         # Updates polygons limits with program constants
-        self.getPolygonsLimits()
+        self.get_polygons_limits()
 
     def start(self):
         # Run the main loop:

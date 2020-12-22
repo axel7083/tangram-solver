@@ -1,5 +1,5 @@
 import copy
-import utils
+from src.scripts import utils
 from shapely.geometry import Polygon, LineString
 
 

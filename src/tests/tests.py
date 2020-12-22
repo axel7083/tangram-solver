@@ -1,6 +1,6 @@
 # Unit testing
-import utils
-from TangramSolver import TangramSolver
+from ..scripts import utils
+from ..scripts.TangramSolver import TangramSolver
 from math import sqrt
 from shapely.geos import TopologicalError
 from shapely.geometry import Polygon
