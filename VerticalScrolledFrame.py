@@ -35,9 +35,11 @@ class VerticalScrolledFrame(tk.Frame):
             # update the scrollbars to match the size of the inner frame
             size = (interior.winfo_reqwidth(), interior.winfo_reqheight())
             canvas.config(scrollregion="0 0 %s %s" % size)
+
             if interior.winfo_reqwidth() != canvas.winfo_width():
                 # update the canvas's width to fit the inner frame
                 canvas.config(width=interior.winfo_reqwidth())
+                canvas.config(height=700)
 
         interior.bind('<Configure>', _configure_interior)
 

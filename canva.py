@@ -263,6 +263,7 @@ class TangramCanvas:
         self.window.title("Tangram")
         self.window.iconbitmap("img/tangram_logo.ico")
         self.window.geometry("1260x800")
+        self.window.resizable(0, 0)
         self.window.scale = 1
 
         self.labels = []  # Keep track of all polygon's number labels
@@ -285,7 +286,7 @@ class TangramCanvas:
 
         # Scrollbar frame
         self.scframe = VerticalScrolledFrame(self.window)
-        self.scframe.place(x=1000, y=100)
+        self.scframe.place(x=1000, y=20)
 
         self.squareModel = PhotoImage(file='img/square.PNG')
         self.button = Button(self.scframe.interior, image=self.squareModel, relief=FLAT,
