@@ -233,7 +233,7 @@ class TangramCanvas:
         # -- Window definition
         self.window = Tk()
         self.window.title("Tangram")
-        self.window.iconbitmap("img/tangram_logo.ico")
+        self.window.iconbitmap("src/tangram_logo.ico")
         self.window.geometry("1260x800")
         self.window.resizable(0, 0)
         self.window.scale = 1
@@ -260,45 +260,45 @@ class TangramCanvas:
         self.scframe = VerticalScrolledFrame(self.window)
         self.scframe.place(x=1000, y=20)
 
-        self.squareModel = PhotoImage(file='img/square.PNG')
+        self.squareModel = PhotoImage(file='src/square.PNG')
         self.button = Button(self.scframe.interior, image=self.squareModel, relief=FLAT,
                              command=lambda: [self.models("square")])
         self.button.pack()
-        self.catModel = PhotoImage(file="img/cat.PNG")
+        self.catModel = PhotoImage(file="src/cat.PNG")
         self.button = Button(self.scframe.interior, image=self.catModel, relief=FLAT,
                              command=lambda: [self.models("cat")])
         self.button.pack()
-        self.boatModel = PhotoImage(file="img/boat.PNG")
+        self.boatModel = PhotoImage(file="src/boat.PNG")
         self.button = Button(self.scframe.interior, image=self.boatModel, relief=FLAT,
                              command=lambda: [self.models("boat")])
         self.button.pack()
-        self.swanModel = PhotoImage(file="img/swan.PNG")
+        self.swanModel = PhotoImage(file="src/swan.PNG")
         self.button = Button(self.scframe.interior, image=self.swanModel, relief=FLAT,
                              command=lambda: [self.models("swan")])
         self.button.pack()
-        self.henModel = PhotoImage(file='img/hen.PNG')
+        self.henModel = PhotoImage(file='src/hen.PNG')
         self.button = Button(self.scframe.interior, image=self.henModel, relief=FLAT,
                              command=lambda: [self.models("hen")])
         self.button.pack()
 
         # Polygons images next to + _ - buttons
-        self.imgMT = PhotoImage(file='img/mt.png')
+        self.imgMT = PhotoImage(file='src/mt.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgMT, state="disabled")
         self.button.grid(row=1, column=4)
 
-        self.imgST = PhotoImage(file='img/st.png')
+        self.imgST = PhotoImage(file='src/st.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgST, state="disabled")
         self.button.grid(row=2, column=4)
 
-        self.imgSQ = PhotoImage(file='img/sq.png')
+        self.imgSQ = PhotoImage(file='src/sq.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgSQ, state="disabled")
         self.button.grid(row=3, column=4)
 
-        self.imgBT = PhotoImage(file='img/bt.png')
+        self.imgBT = PhotoImage(file='src/bt.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgBT, state="disabled")
         self.button.grid(row=4, column=4)
 
-        self.imgP = PhotoImage(file='img/p.png')
+        self.imgP = PhotoImage(file='src/p.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgP, state="disabled")
         self.button.grid(row=5, column=4)
 
