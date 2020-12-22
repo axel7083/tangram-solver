@@ -3,17 +3,29 @@ from shapely.geometry import Polygon
 from shapely.ops import cascaded_union
 from random import uniform
 import matplotlib.pyplot as plt
+import numpy
 
 
-# Compute margin error %
+# Constants
+MAX_MED_TRIANGLE = 2
+MAX_SM_TRIANGLE = 4
+MAX_SQUARE = 3
+MAX_BIG_TRIANGLE = 2
+MAX_PARALLELOGRAM = 4
+CANVAS_SIDE = 700
+
+
 def margin_error(ref, value):
+    """ Compute margin error % """
+
     if ref == 0:
         return abs(value)
     return (abs(value - ref) / ref) * 100
 
 
-# Center a polygon to one of its position
 def center_index(shape, index):
+    """ Center a polygon to one of its position """
+
     if index == 0:
         return shape
 
@@ -28,20 +40,23 @@ def center_index(shape, index):
     return Polygon(coordinates)
 
 
-# Rotate a point (x,y) around (cx, cy)
 def rotate_by(cx, cy, x, y, angle):
+    """ Rotate a point (x,y) around (cx, cy) """
+
     angle = (math.pi * angle) / 4
     return [math.cos(angle) * (x - cx) - math.sin(angle) * (y - cy) + cx,
             math.sin(angle) * (x - cx) + math.cos(angle) * (y - cy) + cy]
 
 
-# From one origin point get 3 coordinates of triangles
 def get_triangle_points(x, y, rotation, size):
+    """ From one origin point get 3 coordinates of triangles """
+
     return [[x, y], rotate_by(x, y, x + size, y, rotation), rotate_by(x, y, x, y + size, rotation)]
 
 
-# From one origin point get the 4 coordinates of the square
 def get_square_points(x, y, rotation, size):
+    """ From one origin point get the 4 coordinates of the square """
+
     rotation %= 2
     return [[x, y],
             rotate_by(x, y, x + size, y, rotation),
@@ -49,8 +64,9 @@ def get_square_points(x, y, rotation, size):
             rotate_by(x, y, x, y + size, rotation)]
 
 
-# From one origin point the 4 coordinates of the parallelogram
 def get_parallelogram_points(x, y, rotation, size):
+    """ From one origin point the 4 coordinates of the parallelogram """
+
     if rotation <= 3:
         return [[x, y],
                 rotate_by(x, y, x + size, y + size, rotation),
@@ -64,19 +80,21 @@ def get_parallelogram_points(x, y, rotation, size):
                 rotate_by(x, y, x, y + 2 * size, rotation)]
 
 
-# Function which evaluate how good the shapes overlap the reference
-def fit_function(state, ref):
+def fit_function(types, state, ref):
+    """ Function which evaluate how good the shapes overlap the reference """
+
     polygons = Polygon()
     for i, shape in enumerate(state):
-        # polygons = cascaded_union([polygons, Polygon(get_triangle_points(shape[0], shape[1], shape[2]))])
-        polygons = cascaded_union([polygons, get_shape_polygon_by_index(i, shape[0], shape[1], shape[2])])
+        polygons = cascaded_union([
+            polygons,
+            get_shape_polygon_by_index(types, i, shape[0], shape[1], shape[2], shape[3])
+        ])
 
     return ref.difference(polygons)
 
 
-# Get polygon depending on the
-def get_shape_polygon_by_index(shapes, index, x, y, r, point_index):
-    offset = 0.005
+def get_shape_polygon_by_index(shapes, index, x, y, r, point_index, offset=0.005):
+    """" Get polygon depending on the """
     unit = 1
     side = math.sqrt(unit * 2)
 
@@ -107,8 +125,8 @@ def get_shape_polygon_by_index(shapes, index, x, y, r, point_index):
         )
 
 
-# Get the number of corner per index
 def get_corner_count_by_index(shapes, index):
+    """ Get the number of corner per index """
     if shapes[index] == "bt":
         return 3
     elif shapes[index] == "p":
@@ -121,8 +139,8 @@ def get_corner_count_by_index(shapes, index):
         return 3
 
 
-# Number of rotation available per shape
 def get_rot_by_index(shapes, index):
+    """ Number of rotation available per shape """
     if shapes[index] == "s":
         return 2
     elif shapes[index] == "p":
@@ -131,8 +149,8 @@ def get_rot_by_index(shapes, index):
         return 8
 
 
-# Merge a list of polygons into one
 def merge(polygons):
+    """ Merge a list of polygons into one """
     return cascaded_union(polygons)
 
 
@@ -161,6 +179,7 @@ def random_float(_type, canvas_side):
 
 
 def find_nearest(shapes, x, y):
+    """ find nearest shapes among the others """
     for shape in shapes:
         for x2, y2 in shape:
             if distance([x, y], [x2, y2]) < 1 / 100:
@@ -177,29 +196,29 @@ def distance(p1, p2):
         return -1
 
 
-def is_nearby(movingFigure, drawing_place, magnetSlider):
+def is_nearby(moving_figure, drawing_place, magnet_slider):
     """ Returns the closest point to one of moving figure points if in range """
 
     figures = drawing_place.find_all()  # retrieves all canvas polygons IDs
 
-    coordsFigures = []
-    for id in figures:
-        if id != movingFigure:
-            coordsFigures.append(drawing_place.coords(id))
+    coords_figures = []
+    for id_ in figures:
+        if id_ != moving_figure:
+            coords_figures.append(drawing_place.coords(id_))
 
-    movingCoords = drawing_place.coords(movingFigure)  # retrieves moving polygon coordinates
-    size = len(movingCoords)
-    size2 = len(coordsFigures)
+    moving_coords = drawing_place.coords(moving_figure)  # retrieves moving polygon coordinates
+    size = len(moving_coords)
+    size2 = len(coords_figures)
     temp = []
     k = 0
 
     while k <= size:
-        temp = get_xy_head(movingCoords[k:])  # takes two first coord of movingCoords list from index k
+        temp = get_xy_head(moving_coords[k:])  # takes two first coord of movingCoords list from index k
         k = k + 2
         j = 0
         while j <= size2:
             j = j + 1
-            for fig in coordsFigures:
+            for fig in coords_figures:
                 fix = fig
                 l = 0
                 while l < len(fig):
@@ -207,7 +226,7 @@ def is_nearby(movingFigure, drawing_place, magnetSlider):
                     cut = get_xy_head(fix)
                     fix = fix[2:]
                     # checks if current point 'cut' is close enough to the moving figure point
-                    if distance(temp, cut) <= magnetSlider.get() and distance(temp, cut) != -1:
+                    if distance(temp, cut) <= magnet_slider.get() and distance(temp, cut) != -1:
                         return temp, cut
 
 
@@ -223,6 +242,7 @@ def get_xy_head(_list):
 
 
 def round_coords(coords):
+    """ rounds a list of coords """
     output = []
     for coord in coords:
         output.append(round(coord))
@@ -230,8 +250,8 @@ def round_coords(coords):
     return output
 
 
-# Function to show results
 def draw_node(shapes, state, ref):
+    """ Function to show results using matplotlib """
     plt.figure()
 
     multipolygon = []
@@ -323,3 +343,26 @@ def replace(original, change):
 def random_color():
     import random
     return "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+
+
+def get_settings_by_type(_type, x, y):
+    unit = 100
+    side = round(math.sqrt(2) * 100)
+
+    if _type == "bt":
+        return MAX_BIG_TRIANGLE, numpy.array(
+            get_triangle_points(x, y, 0, unit * 2)).flatten().tolist()
+    elif _type == "p":
+        return MAX_PARALLELOGRAM, numpy.array(
+            get_parallelogram_points(x, y, 0, side / 2)).flatten().tolist()
+    elif _type == "mt":
+        return MAX_MED_TRIANGLE, numpy.array(get_triangle_points(x, y, 0, side)).flatten().tolist()
+    elif _type == "s":
+        return MAX_SQUARE, numpy.array(get_square_points(x, y, 0, unit)).flatten().tolist()
+    elif _type == "st":
+        return MAX_SM_TRIANGLE, numpy.array(get_triangle_points(x, y, 0, unit)).flatten().tolist()
+
+
+def label_value(label):
+    """ Converts label text to int """
+    return int(label["text"])

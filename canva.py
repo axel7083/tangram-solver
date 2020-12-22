@@ -1,42 +1,15 @@
-import math
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 
-import numpy
 from shapely.geometry import Polygon
 
 import SolvingThread
-# Constants
 import utils
 from CanvasPolygon import CanvasPolygon
 
-MAX_MED_TRIANGLE = 2
-MAX_SM_TRIANGLE = 4
-MAX_SQUARE = 3
-MAX_BIG_TRIANGLE = 2
-MAX_PARALLELOGRAM = 4
-CANVAS_SIDE = 700
-
 
 class TangramCanvas:
-
-    def get_settings_by_type(self, _type, x, y):
-        unit = 100
-        side = round(math.sqrt(2) * 100)
-
-        if _type == "bt":
-            return MAX_BIG_TRIANGLE, numpy.array(
-                utils.get_triangle_points(x, y, 0, unit * 2)).flatten().tolist()
-        elif _type == "p":
-            return MAX_PARALLELOGRAM, numpy.array(
-                utils.get_parallelogram_points(x, y, 0, side / 2)).flatten().tolist()
-        elif _type == "mt":
-            return MAX_MED_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, side)).flatten().tolist()
-        elif _type == "s":
-            return MAX_SQUARE, numpy.array(utils.get_square_points(x, y, 0, unit)).flatten().tolist()
-        elif _type == "st":
-            return MAX_SM_TRIANGLE, numpy.array(utils.get_triangle_points(x, y, 0, unit)).flatten().tolist()
 
     def polygon_action(self, _type, label, action):
         """ Add or Delete polygons of the canvas depending on what button the user clicked on """
@@ -45,17 +18,13 @@ class TangramCanvas:
         elif action == "del":
             self.delete_polygon(_type, label)
 
-    def label_value(self, label):
-        """ Converts label text to int """
-        return int(label["text"])
-
     def create_polygon(self, _type, label):
-        x = CANVAS_SIDE / 2
-        y = CANVAS_SIDE / 2
-        _max, coords = self.get_settings_by_type(_type, x, y)
+        x = utils.CANVAS_SIDE / 2
+        y = utils.CANVAS_SIDE / 2
+        _max, coords = utils.get_settings_by_type(_type, x, y)
         color = utils.random_color()
 
-        if self.label_value(label) + 1 <= _max and self.label_value(label) >= 0:
+        if utils.label_value(label) + 1 <= _max and utils.label_value(label) >= 0:
             # Creating a new Polygon
             CanvasPolygon(coords, color, _type, self.drawing_place, self.magnetSlider)
             utils.update_count_label(label, "+")
@@ -65,7 +34,7 @@ class TangramCanvas:
     def delete_polygon(self, _type, label):
         """ Deletes polygon that has for tag : 'type' """
 
-        if self.label_value(label) > 0:
+        if utils.label_value(label) > 0:
 
             figures = self.drawing_place.find_withtag(_type)
             _len = len(figures)
@@ -85,13 +54,18 @@ class TangramCanvas:
 
         figures = self.drawing_place.find_all()
         coords = []
+        co = []
         tags = []
         if len(figures) >= 1:
             for fig in figures:
                 tags.append(self.drawing_place.gettags(fig))
+                co.append(utils.tuple_to_list(self.drawing_place.coords(fig)))
                 coords.append(utils.divide_coords(utils.tuple_to_list(self.drawing_place.coords(fig)), 100))
 
             types = self.getTypeofPolygons()
+
+            print(co)
+            print(types)
 
             coordinates = []
             for shape in coords:
@@ -163,11 +137,11 @@ class TangramCanvas:
     def getPolygonsLimits(self):
         """ Updates at initialization, labels for polygons limits """
 
-        self.labelMax1["text"] = str(MAX_MED_TRIANGLE)
-        self.labelMax2["text"] = str(MAX_SM_TRIANGLE)
-        self.labelMax3["text"] = str(MAX_SQUARE)
-        self.labelMax4["text"] = str(MAX_BIG_TRIANGLE)
-        self.labelMax5["text"] = str(MAX_PARALLELOGRAM)
+        self.labelMax1["text"] = str(utils.MAX_MED_TRIANGLE)
+        self.labelMax2["text"] = str(utils.MAX_SM_TRIANGLE)
+        self.labelMax3["text"] = str(utils.MAX_SQUARE)
+        self.labelMax4["text"] = str(utils.MAX_BIG_TRIANGLE)
+        self.labelMax5["text"] = str(utils.MAX_PARALLELOGRAM)
 
     def __init__(self):
         """ Tkinter objets definitions """

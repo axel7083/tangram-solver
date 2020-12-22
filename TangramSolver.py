@@ -7,17 +7,13 @@ class TangramSolver:
     # Variables
     coordinates = []
     shapes = ["bt", "bt", "p", "mt", "s", "st", "st"]  # Example
-    width = 20
-    height = 20
     global_size = 1
     output = []
 
     # Constructor
-    def __init__(self, coordinates, shapes, width=20, height=20, global_size=1):
+    def __init__(self, coordinates, shapes, global_size=1):
         self.coordinates = coordinates
         self.shapes = shapes
-        self.width = width
-        self.height = height
         self.global_size = global_size
 
     # Exploring the corners
@@ -31,6 +27,7 @@ class TangramSolver:
         # Convert check multipolygon and convert it into list of polygon
         for sub_ref in multipolygon:
 
+            # Avoiding error
             if isinstance(sub_ref, LineString):
                 continue
 
