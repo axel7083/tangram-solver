@@ -71,8 +71,8 @@ class CanvasPolygon:
         yesCase = utils.is_nearby(self.id, self.canvas, self.magnetSlider)
         if yesCase:
             self.delete()
-            CanvasPolygon(utils.replace(utils.tuple_to_list(self.coords), utils.tuple_to_list(yesCase)), self.color, self.tag,
-                          self.canvas, self.magnetSlider)
+            CanvasPolygon(utils.replace(utils.tuple_to_list(self.coords), utils.tuple_to_list(yesCase)),
+                          self.color, self.tag, self.canvas, self.magnetSlider)
 
         self.move = False
 
@@ -124,7 +124,7 @@ class CanvasPolygon:
             new_points.append(new_y)
 
         self.delete()
-        new_polygon = CanvasPolygon(new_points, self.color, self.tag, self.canvas, self.magnetSlider)
+        CanvasPolygon(new_points, self.color, self.tag, self.canvas, self.magnetSlider)
 
-    def print_figure_coords(figure):
+    def print_figure_coords(self, figure):
         print(figure.coords)
