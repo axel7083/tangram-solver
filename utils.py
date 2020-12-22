@@ -327,12 +327,13 @@ def replace(original, change):
         placed = 0
         for i, p in enumerate(original):
             if p == change[0][0]:
-                if original[i + 1] == change[0][1]:
-                    new.append(change[1][0])
-                    new.append(change[1][1])
-                    placed = i + 2
-                else:
-                    new.append(p - diff[0]) if i % 2 == 0 else new.append(p - diff[1])
+                if original[i + 1]:  # prevents a list index out of range error from happening
+                    if original[i + 1] == change[0][1]:
+                        new.append(change[1][0])
+                        new.append(change[1][1])
+                        placed = i + 2
+                    else:
+                        new.append(p - diff[0]) if i % 2 == 0 else new.append(p - diff[1])
             else:
                 new.append(p - diff[0]) if i % 2 == 0 else new.append(p - diff[1])
 
