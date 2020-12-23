@@ -187,17 +187,17 @@ class TangramCanvas:
         self.drawing_place = Canvas(self.window, width=700, height=700, bg="grey")
         self.drawing_place.pack(pady=20, padx=0)
 
-        self.numPolygonsFrame = LabelFrame(self.window, text="Number of Polygons", padx=20, pady=10, labelanchor="nw")
-        self.numPolygonsFrame.place(x=70, y=50)
+        self.numPolygonsFrame = LabelFrame(self.window, text="Number of Polygons", padx=14, pady=10, labelanchor="nw")
+        self.numPolygonsFrame.place(x=71, y=50)
 
         self.magnetFrame = LabelFrame(self.window, text="Magnetization distance", padx=10, pady=5, labelanchor="nw")
-        self.magnetFrame.place(x=40, y=250)
+        self.magnetFrame.place(x=50, y=250)
 
         self.commandFrame = LabelFrame(self.window, text="Actions", padx=5, pady=5, labelanchor="nw")
-        self.commandFrame.place(x=70, y=350)
+        self.commandFrame.place(x=80, y=350)
 
         self.polygonsLimitsFrame = LabelFrame(self.window, text="Polygon's limits", padx=5, pady=5, labelanchor="nw")
-        self.polygonsLimitsFrame.place(x=70, y=500)
+        self.polygonsLimitsFrame.place(x=90, y=500)
 
         # Scrollbar frame
         self.scframe = VerticalScrolledFrame(self.window)
