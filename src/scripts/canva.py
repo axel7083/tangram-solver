@@ -5,6 +5,7 @@ from src.scripts import utils, SolvingThread
 from src.scripts.CanvasPolygon import CanvasPolygon
 from src.scripts.VerticalScrolledFrame import VerticalScrolledFrame
 
+
 class TangramCanvas:
 
     def polygon_action(self, _type, label, action, coord):
@@ -24,12 +25,12 @@ class TangramCanvas:
 
             if utils.label_value(label) + 1 <= _max and utils.label_value(label) >= 0:
                 # Creating a new Polygon
-                CanvasPolygon(coords, color, _type, self.drawing_place, self.magnetSlider)
+                CanvasPolygon(coords, color, _type, self.drawing_place, self.magnet_slider)
                 utils.update_count_label(label, "+")
             else:
                 messagebox.showerror("Maximum reach", "You've reached the maximum amount of this item.")
         else:
-            CanvasPolygon(coord, color, _type, self.drawing_place, self.magnetSlider)
+            CanvasPolygon(coord, color, _type, self.drawing_place, self.magnet_slider)
             utils.update_count_label(label, "+")
 
     def delete_polygon(self, _type, label):
@@ -106,7 +107,7 @@ class TangramCanvas:
                     xy.append(sub_ref.exterior.xy[0][i] * 100)
                     xy.append(sub_ref.exterior.xy[1][i] * 100)
 
-                CanvasPolygon(xy, 'black', "origin", self.drawing_place, self.magnetSlider, False)
+                CanvasPolygon(xy, 'black', "origin", self.drawing_place, self.magnet_slider, False)
                 print(xy)
 
             print(types)
@@ -320,9 +321,9 @@ class TangramCanvas:
         self.minusButton5.grid(row=5, column=3)
 
         # Buttons and Slider placement
-        self.magnetSlider = Scale(self.magnetFrame, from_=10, to=100, length=150, resolution=5, orient=HORIZONTAL,
-                                  width=20)
-        self.magnetSlider.grid(row=0, column=0)
+        self.magnet_slider = Scale(self.magnetFrame, from_=10, to=100, length=150, resolution=5, orient=HORIZONTAL,
+                                   width=20)
+        self.magnet_slider.grid(row=0, column=0)
 
         self.btn_validate = Button(self.commandFrame, text="Validate", command=lambda: [self.transform_coords()])
         self.btn_validate.grid(row=1, column=1)

@@ -1,25 +1,25 @@
-from math import *
+from math import radians, cos, sin
 from src.scripts import utils
 
 
 class CanvasPolygon:
 
     # Constructor
-    def __init__(self, coords, color, tag, canvas, magnetSlider, movable=True):
+    def __init__(self, coords, color, tag, canvas, magnet_slider, movable=True):
         self.coords = coords
         self.color = color
         self.move = False
         self.tag = tag
         self.canvas = canvas
-        self.magnetSlider = magnetSlider
+        self.magnet_slider = magnet_slider
         self.movable = movable
 
-        self.id = canvas.create_polygon(list(self.coords), fill=self.color, tags=self.tag)
+        self.id_ = canvas.create_polygon(list(self.coords), fill=self.color, tags=self.tag)
 
-        canvas.tag_bind(self.id, '<Button-1>', self.start_movement)
-        canvas.tag_bind(self.id, '<Motion>', self.movement)
-        canvas.tag_bind(self.id, '<ButtonRelease-1>', self.stop_movement)
-        canvas.tag_bind(self.id, '<Button-3>', self.rotate)
+        canvas.tag_bind(self.id_, '<Button-1>', self.start_movement)
+        canvas.tag_bind(self.id_, '<Motion>', self.movement)
+        canvas.tag_bind(self.id_, '<ButtonRelease-1>', self.stop_movement)
+        canvas.tag_bind(self.id_, '<Button-3>', self.rotate)
 
     def get_coords(self):
         """ Returns polygon's coordinates """
@@ -34,7 +34,7 @@ class CanvasPolygon:
     def delete(self):
         """ Deletes specified polygon """
 
-        self.canvas.delete(self.id)
+        self.canvas.delete(self.id_)
 
     def start_movement(self, event):
         """ Modify move attribute and converts mouse coord to canvas coord """
@@ -63,16 +63,16 @@ class CanvasPolygon:
             self.initi_x = end_x  # Update previous current with new location
             self.initi_y = end_y
 
-            self.canvas.move(self.id, deltax, deltay)  # Move object
+            self.canvas.move(self.id_, deltax, deltay)  # Move object
 
     def stop_movement(self, event):
         """ Updates move attribute and sticks the moving polygon to nearby polygon """
 
-        yesCase = utils.is_nearby(self.id, self.canvas, self.magnetSlider)
-        if yesCase:
+        nearby = utils.is_nearby(self.id_, self.canvas, self.magnet_slider)
+        if nearby:
             self.delete()
-            CanvasPolygon(utils.replace(utils.tuple_to_list(self.coords), utils.tuple_to_list(yesCase)),
-                          self.color, self.tag, self.canvas, self.magnetSlider)
+            CanvasPolygon(utils.replace(utils.tuple_to_list(self.coords), utils.tuple_to_list(nearby)),
+                          self.color, self.tag, self.canvas, self.magnet_slider)
 
         self.move = False
 
@@ -81,50 +81,44 @@ class CanvasPolygon:
 
         coord = utils.tuple_to_list(self.coords)  # Retrieve object points coordinates
         # old_coord = list(coord)  # Tuple to List
-        c = []  # New coords
+        coords = []  # New coords
         i = 0  # Cursor on old_coord
         for coordinates in coord:
 
             # check if index of coordinates in range of i and len(old_coord) in old_coord is pair (x coord)
             if (coord.index(coordinates, i, len(coord)) % 2) == 0:
-                c.append(coordinates + deltax)
+                coords.append(coordinates + deltax)
             else:  # index's impair => y-coord
-                c.append(coordinates + deltay)
+                coords.append(coordinates + deltay)
             i += 1
 
-        coord2 = tuple(c)  # List to Tuple
-        self.set_coords(coord2)
+        self.set_coords(tuple(coords))
 
     def rotate(self, event):
         """ Rotate polygon the given angle about its center. """
 
         theta = radians(45)  # Convert angle to radians
-        cosang, sinang = cos(theta), sin(theta)
-        new_points, a, b = [], [], []
-        i, j, cx, cy = 0, 0, 0.0, 0.0
+        cos_ang, sin_ang = cos(theta), sin(theta)
+        new_points, alpha, beta = [], [], []
+        i = 0
         points = self.get_coords()
 
-        for p in points:
-            if (points.index(p, i, len(points)) % 2) == 0:
-                a.append(p)
+        for point in points:
+            if (points.index(point, i, len(points)) % 2) == 0:
+                alpha.append(point)
             else:
-                b.append(p)
+                beta.append(point)
             i += 1
 
-        # Takes center point as the first point of the Polygon to use it as pivot
-        cx = points[0]
-        cy = points[1]
-
         # find new x_y for each point
-        for x, y in zip(a, b):
-            tx, ty = x - cx, y - cy
-            new_x = (tx * cosang + ty * sinang) + cx
-            new_y = (-tx * sinang + ty * cosang) + cy
-            new_points.append(new_x)
-            new_points.append(new_y)
+        for x_pos, y_pos in zip(alpha, beta):
+            tx_pos, ty_pos = x_pos - points[0], y_pos - points[1]
+            new_points.append(
+                (tx_pos * cos_ang + ty_pos * sin_ang) + points[0]
+            )
+            new_points.append(
+                (-tx_pos * sin_ang + ty_pos * cos_ang) + points[1]
+            )
 
         self.delete()
-        CanvasPolygon(new_points, self.color, self.tag, self.canvas, self.magnetSlider)
-
-    def print_figure_coords(self, figure):
-        print(figure.coords)
+        CanvasPolygon(new_points, self.color, self.tag, self.canvas, self.magnet_slider)
