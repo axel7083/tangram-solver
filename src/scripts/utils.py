@@ -30,55 +30,54 @@ def center_index(shape, index):
     if index == 0:
         return shape
 
-    xs, ys = shape.exterior.xy
-    move = [xs[0] - xs[index], ys[0] - ys[index]]
+    x_coords, y_coords = shape.exterior.xy
+    move = [x_coords[0] - x_coords[index], y_coords[0] - y_coords[index]]
     coordinates = []
 
-    xs, ys = shape.exterior.xy
-    for i in range(len(xs)):
-        coordinates.append([xs[i] + move[0], ys[i] + move[1]])
+    for i in range(len(x_coords)):
+        coordinates.append([x_coords[i] + move[0], y_coords[i] + move[1]])
 
     return Polygon(coordinates)
 
 
-def rotate_by(cx, cy, x, y, angle):
+def rotate_by(x_pivot, y_pivot, x_pos, y_pos, angle):
     """ Rotate a point (x,y) around (cx, cy) """
 
     angle = (math.pi * angle) / 4
-    return [math.cos(angle) * (x - cx) - math.sin(angle) * (y - cy) + cx,
-            math.sin(angle) * (x - cx) + math.cos(angle) * (y - cy) + cy]
+    return [math.cos(angle) * (x_pos - x_pivot) - math.sin(angle) * (y_pos - y_pivot) + x_pivot,
+            math.sin(angle) * (x_pos - x_pivot) + math.cos(angle) * (y_pos - y_pivot) + y_pivot]
 
 
-def get_triangle_points(x, y, rotation, size):
+def get_triangle_points(x_pos, y_pos, rotation, size):
     """ From one origin point get 3 coordinates of triangles """
 
-    return [[x, y], rotate_by(x, y, x + size, y, rotation), rotate_by(x, y, x, y + size, rotation)]
+    return [[x_pos, y_pos], rotate_by(x_pos, y_pos, x_pos + size, y_pos, rotation), rotate_by(x_pos, y_pos, x_pos, y_pos + size, rotation)]
 
 
-def get_square_points(x, y, rotation, size):
+def get_square_points(x_pos, y_pos, rotation, size):
     """ From one origin point get the 4 coordinates of the square """
 
     rotation %= 2
-    return [[x, y],
-            rotate_by(x, y, x + size, y, rotation),
-            rotate_by(x, y, x + size, y + size, rotation),
-            rotate_by(x, y, x, y + size, rotation)]
+    return [[x_pos, y_pos],
+            rotate_by(x_pos, y_pos, x_pos + size, y_pos, rotation),
+            rotate_by(x_pos, y_pos, x_pos + size, y_pos + size, rotation),
+            rotate_by(x_pos, y_pos, x_pos, y_pos + size, rotation)]
 
 
-def get_parallelogram_points(x, y, rotation, size):
+def get_parallelogram_points(x_pos, y_pos, rotation, size):
     """ From one origin point the 4 coordinates of the parallelogram """
 
     if rotation <= 3:
-        return [[x, y],
-                rotate_by(x, y, x + size, y + size, rotation),
-                rotate_by(x, y, x + size, y + 3 * size, rotation),
-                rotate_by(x, y, x, y + 2 * size, rotation)]
+        return [[x_pos, y_pos],
+                rotate_by(x_pos, y_pos, x_pos + size, y_pos + size, rotation),
+                rotate_by(x_pos, y_pos, x_pos + size, y_pos + 3 * size, rotation),
+                rotate_by(x_pos, y_pos, x_pos, y_pos + 2 * size, rotation)]
     # flip parallelogram
     else:
-        return [[x, y],
-                rotate_by(x, y, x - size, y + size, rotation),
-                rotate_by(x, y, x - size, y + 3 * size, rotation),
-                rotate_by(x, y, x, y + 2 * size, rotation)]
+        return [[x_pos, y_pos],
+                rotate_by(x_pos, y_pos, x_pos - size, y_pos + size, rotation),
+                rotate_by(x_pos, y_pos, x_pos - size, y_pos + 3 * size, rotation),
+                rotate_by(x_pos, y_pos, x_pos, y_pos + 2 * size, rotation)]
 
 
 def fit_function(types, state, ref):
@@ -94,34 +93,34 @@ def fit_function(types, state, ref):
     return ref.difference(polygons)
 
 
-def get_shape_polygon_by_index(shapes, index, x, y, r, point_index, offset=0.005):
+def get_shape_polygon_by_index(shapes, index, x_pos, y_pos, rotation, point_index, offset=0.005):
     """" Get polygon depending on the """
     unit = 1
     side = math.sqrt(unit * 2)
 
     if shapes[index] == "bt":
         return center_index(
-            Polygon(get_triangle_points(x, y, r, unit * 2 - offset)),
+            Polygon(get_triangle_points(x_pos, y_pos, rotation, unit * 2 - offset)),
             point_index
         )
     elif shapes[index] == "p":
         return center_index(
-            Polygon(get_parallelogram_points(x, y, r, side / 2 - offset)),
+            Polygon(get_parallelogram_points(x_pos, y_pos, rotation, side / 2 - offset)),
             point_index
         )
     elif shapes[index] == "mt":
         return center_index(
-            Polygon(get_triangle_points(x, y, r, side - offset)),
+            Polygon(get_triangle_points(x_pos, y_pos, rotation, side - offset)),
             point_index
         )
     elif shapes[index] == "s":
         return center_index(
-            Polygon(get_square_points(x, y, r, unit - offset)),
+            Polygon(get_square_points(x_pos, y_pos, rotation, unit - offset)),
             point_index
         )
     elif shapes[index] == "st":
         return center_index(
-            Polygon(get_triangle_points(x, y, r, unit - offset)),
+            Polygon(get_triangle_points(x_pos, y_pos, rotation, unit - offset)),
             point_index
         )
 
@@ -179,20 +178,20 @@ def random_float(_type, canvas_side):
         return uniform(0, canvas_side - 212.13), uniform(0, canvas_side - 212.13)
 
 
-def find_nearest(shapes, x, y):
+def find_nearest(shapes, x_pos, y_pos):
     """ find nearest shapes among the others """
     for shape in shapes:
         for x2, y2 in shape:
-            if distance([x, y], [x2, y2]) < 1 / 100:
+            if distance([x_pos, y_pos], [x2, y2]) < 1 / 100:
                 return [x2, y2]
-    return [x, y]
+    return [x_pos, y_pos]
 
 
-def distance(p1, p2):
+def distance(point_a, point_b):
     """ Returns the euclidean distance between two points if they exist"""
 
-    if p1 and p2:
-        return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+    if point_a and point_b:
+        return math.sqrt((point_b[0] - point_a[0]) ** 2 + (point_b[1] - point_a[1]) ** 2)
     else:
         return -1
 
@@ -263,15 +262,14 @@ def draw_node(shapes, state, ref):
 
     # Convert check multipolygon and convert it into list of polygon
     for sub_ref in multipolygon:
-        xs, ys = sub_ref.exterior.xy
-        plt.plot(xs, ys)
+        x_coords, y_coords = sub_ref.exterior.xy
+        plt.plot(x_coords, y_coords)
 
     for i, shape in enumerate(state):
         polygon = get_shape_polygon_by_index(shapes, i, shape[0], shape[1], shape[2], shape[3])
+        x_coords, y_coords = polygon.exterior.xy
 
-        xs, ys = polygon.exterior.xy
-
-        plt.plot(xs, ys)
+        plt.plot(x_coords, y_coords)
 
     plt.gca().set_aspect('equal', 'datalim')
     plt.gca().invert_yaxis()
@@ -347,22 +345,22 @@ def random_color():
     return "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
 
 
-def get_settings_by_type(_type, x, y):
+def get_settings_by_type(_type, x_pos, y_pos):
     unit = 100
     side = round(math.sqrt(2) * 100)
 
     if _type == "bt":
         return MAX_BIG_TRIANGLE, numpy.array(
-            get_triangle_points(x, y, 0, unit * 2)).flatten().tolist()
+            get_triangle_points(x_pos, y_pos, 0, unit * 2)).flatten().tolist()
     elif _type == "p":
         return MAX_PARALLELOGRAM, numpy.array(
-            get_parallelogram_points(x, y, 0, side / 2)).flatten().tolist()
+            get_parallelogram_points(x_pos, y_pos, 0, side / 2)).flatten().tolist()
     elif _type == "mt":
-        return MAX_MED_TRIANGLE, numpy.array(get_triangle_points(x, y, 0, side)).flatten().tolist()
+        return MAX_MED_TRIANGLE, numpy.array(get_triangle_points(x_pos, y_pos, 0, side)).flatten().tolist()
     elif _type == "s":
-        return MAX_SQUARE, numpy.array(get_square_points(x, y, 0, unit)).flatten().tolist()
+        return MAX_SQUARE, numpy.array(get_square_points(x_pos, y_pos, 0, unit)).flatten().tolist()
     elif _type == "st":
-        return MAX_SM_TRIANGLE, numpy.array(get_triangle_points(x, y, 0, unit)).flatten().tolist()
+        return MAX_SM_TRIANGLE, numpy.array(get_triangle_points(x_pos, y_pos, 0, unit)).flatten().tolist()
 
 
 def label_value(label):
@@ -372,6 +370,6 @@ def label_value(label):
 
 def load_prefabs():
     """ We avoid hardcoding data so we load it from storage """
-    f = open('../assets/prefabs.json',)
-    data = json.load(f)
+    file = open('../assets/prefabs.json',)
+    data = json.load(file)
     return data
