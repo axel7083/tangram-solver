@@ -3,6 +3,7 @@ from src.scripts import utils
 
 
 class CanvasPolygon:
+    """ This class is used to define a polygon on the screen """
 
     # Constructor
     def __init__(self, coords, color, tag, canvas, magnet_slider, movable=True):
@@ -13,6 +14,8 @@ class CanvasPolygon:
         self.canvas = canvas
         self.magnet_slider = magnet_slider
         self.movable = movable
+        self.init_x = 0
+        self.init_y = 0
 
         self.id_ = canvas.create_polygon(list(self.coords), fill=self.color, tags=self.tag)
 
@@ -45,8 +48,8 @@ class CanvasPolygon:
         self.move = True
 
         # Translate mouse coordinates to canvas coordinate
-        self.initi_x = self.canvas.canvasx(event.x)
-        self.initi_y = self.canvas.canvasy(event.y)
+        self.init_x = self.canvas.canvasx(event.x)
+        self.init_y = self.canvas.canvasy(event.y)
 
     def movement(self, event):
         """ Moves polygon on the canvas """
@@ -55,13 +58,13 @@ class CanvasPolygon:
             end_x = self.canvas.canvasx(event.x)  # Translate mouse x screen coordinate to canvas coordinate
             end_y = self.canvas.canvasy(event.y)  # Translate mouse y screen coordinate to canvas coordinate
 
-            deltax = end_x - self.initi_x  # Find the difference
-            deltay = end_y - self.initi_y  # Find the difference
+            deltax = end_x - self.init_x  # Find the difference
+            deltay = end_y - self.init_y  # Find the difference
 
             self.new_position(deltax, deltay)
 
-            self.initi_x = end_x  # Update previous current with new location
-            self.initi_y = end_y
+            self.init_x = end_x  # Update previous current with new location
+            self.init_y = end_y
 
             self.canvas.move(self.id_, deltax, deltay)  # Move object
 
