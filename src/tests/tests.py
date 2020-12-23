@@ -1,5 +1,5 @@
 # Unit testing
-from ..scripts import utils
+from ..scripts import PolygonUtils
 from ..scripts.TangramSolver import TangramSolver
 from math import sqrt
 from shapely.geos import TopologicalError
@@ -36,6 +36,6 @@ def test_tangram_fit_function():
              [2.1063203435596423, 2.1263203435596427, 1, 1],
              [2.1063203435596423, 0.7191778489984131, 7, 0]]
 
-    area = utils.fit_function(types, state, Polygon(original)).area
+    area = PolygonUtils.fit_function(types, state, Polygon(original)).area
     assert area < 0.1
 

@@ -1,5 +1,5 @@
 import copy
-from src.scripts import utils
+from src.scripts import utils, PolygonUtils
 from shapely.geometry import Polygon, LineString
 
 
@@ -36,13 +36,13 @@ class TangramSolver:
                 x = sub_ref.exterior.xy[0][i]
                 y = sub_ref.exterior.xy[1][i]
 
-                for r in range(utils.get_rot_by_index(self.shapes, shape_index)):
+                for r in range(PolygonUtils.get_rot_by_index(self.shapes, shape_index)):
 
-                    for point_index in range(utils.get_corner_count_by_index(self.shapes, shape_index)):
+                    for point_index in range(PolygonUtils.get_corner_count_by_index(self.shapes, shape_index)):
 
                         new_state = copy.deepcopy(state)
                         new_state.append([x, y, r, point_index])
-                        poly = utils.get_shape_polygon_by_index(self.shapes, shape_index, x, y, r, point_index)
+                        poly = PolygonUtils.get_shape_polygon_by_index(self.shapes, shape_index, x, y, r, point_index)
 
                         # new_ref = fit_function(state, ref)
                         diff = ref.difference(poly)

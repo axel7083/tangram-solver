@@ -1,7 +1,7 @@
 from tkinter import messagebox, ttk, Tk, Canvas, LabelFrame, PhotoImage, Button, FLAT, Label, HORIZONTAL, CENTER, Scale
 from shapely.geometry import Polygon
 
-from src.scripts import utils, SolvingThread
+from src.scripts import utils, SolvingThread, CanvasUtils, PolygonUtils
 from src.scripts.CanvasPolygon import CanvasPolygon
 from src.scripts.VerticalScrolledFrame import VerticalScrolledFrame
 
@@ -16,27 +16,27 @@ class TangramCanvas:
             self.delete_polygon(_type, label)
 
     def create_polygon(self, _type, label, coord):
-        x_pos = utils.CANVAS_SIDE / 2
-        y_pos = utils.CANVAS_SIDE / 2
+        x_pos = CanvasUtils.CANVAS_SIDE / 2
+        y_pos = CanvasUtils.CANVAS_SIDE / 2
 
         color = utils.random_color()
         if coord == 0:
-            _max, coords = utils.get_settings_by_type(_type, x_pos, y_pos)
+            _max, coords = CanvasUtils.get_settings_by_type(_type, x_pos, y_pos)
 
-            if utils.label_value(label) + 1 <= _max and utils.label_value(label) >= 0:
+            if CanvasUtils.label_value(label) + 1 <= _max and CanvasUtils.label_value(label) >= 0:
                 # Creating a new Polygon
                 CanvasPolygon(coords, color, _type, self.drawing_place, self.magnet_slider)
-                utils.update_count_label(label, "+")
+                CanvasUtils.update_count_label(label, "+")
             else:
                 messagebox.showerror("Maximum reach", "You've reached the maximum amount of this item.")
         else:
             CanvasPolygon(coord, color, _type, self.drawing_place, self.magnet_slider)
-            utils.update_count_label(label, "+")
+            CanvasUtils.update_count_label(label, "+")
 
     def delete_polygon(self, _type, label):
         """ Deletes polygon that has for tag : 'type' """
 
-        if utils.label_value(label) > 0:
+        if CanvasUtils.label_value(label) > 0:
 
             figures = self.drawing_place.find_withtag(_type)
             _len = len(figures)
@@ -47,7 +47,7 @@ class TangramCanvas:
                 result = utils.tuple_to_list(figures)
                 self.drawing_place.delete(result[_len - 1])
 
-            utils.update_count_label(label, "-")
+            CanvasUtils.update_count_label(label, "-")
         else:
             messagebox.showerror("Minimum reached", "You've reached the minimum amount of this item.")
 
@@ -84,7 +84,7 @@ class TangramCanvas:
                 polygons.append(Polygon(shape))
 
             # Output can be polygon OR multipolygon
-            output = utils.merge(polygons)
+            output = PolygonUtils.merge(polygons)
             print("Output:")
             print(output)
 
@@ -96,7 +96,7 @@ class TangramCanvas:
                 multipolygon = [output]
                 print("Polygon")
 
-            utils.reset_canvas(self.drawing_place, self.labels)
+            CanvasUtils.reset_canvas(self.drawing_place, self.labels)
 
             # Convert check multipolygon and convert it into list of polygon
             for sub_ref in multipolygon:
@@ -114,7 +114,7 @@ class TangramCanvas:
 
             should_reset = SolvingThread.solve(output, types, self.window, self.progress)
             if should_reset:
-                utils.reset_canvas(self.drawing_place, self.labels)
+                CanvasUtils.reset_canvas(self.drawing_place, self.labels)
                 self.window.protocol("WM_DELETE_WINDOW", self.close_event)
 
             # utils.draw_node(shapes, state, ref)
@@ -138,11 +138,11 @@ class TangramCanvas:
     def get_polygons_limits(self):
         """ Updates at initialization, labels for polygons limits """
 
-        self.labelMax1["text"] = str(utils.MAX_MED_TRIANGLE)
-        self.labelMax2["text"] = str(utils.MAX_SM_TRIANGLE)
-        self.labelMax3["text"] = str(utils.MAX_SQUARE)
-        self.labelMax4["text"] = str(utils.MAX_BIG_TRIANGLE)
-        self.labelMax5["text"] = str(utils.MAX_PARALLELOGRAM)
+        self.labelMax1["text"] = str(CanvasUtils.MAX_MED_TRIANGLE)
+        self.labelMax2["text"] = str(CanvasUtils.MAX_SM_TRIANGLE)
+        self.labelMax3["text"] = str(CanvasUtils.MAX_SQUARE)
+        self.labelMax4["text"] = str(CanvasUtils.MAX_BIG_TRIANGLE)
+        self.labelMax5["text"] = str(CanvasUtils.MAX_PARALLELOGRAM)
 
     def get_label_by_type(self, _type):
         for label in self.labels:
@@ -152,7 +152,7 @@ class TangramCanvas:
     def models(self, index):
         """ Puts a puzzle model on the canvas """
 
-        utils.reset_canvas(self.drawing_place, self.labels)
+        CanvasUtils.reset_canvas(self.drawing_place, self.labels)
 
         _type = self.prefabs[index]['types']
         coords = self.prefabs[index]['positions']
@@ -160,6 +160,15 @@ class TangramCanvas:
         # _type, coords = get_polygons_by_model(model)
         for i, coord in enumerate(coords):
             self.polygon_action(_type[i], self.get_label_by_type(_type[i]), "add", coord)
+
+    def setup_prefabs(self):
+        """ Setup the prefabs in the scrollbar """
+        for i, elem in enumerate(self.prefabs):
+            print("[" + str(i) + "] Creating " + elem['name'])
+            self.prefabs_models.append(PhotoImage(file='../images/' + elem['name'] + '.PNG'))
+            self.prefabs_buttons.append(Button(self.scframe.interior, image=self.prefabs_models[i], relief=FLAT,
+                                               command=lambda opt=i: [self.models(opt)]))
+            self.prefabs_buttons[i].pack()
 
     def __init__(self):
         """ Tkinter objets definitions """
@@ -194,18 +203,6 @@ class TangramCanvas:
         self.scframe = VerticalScrolledFrame(self.window)
         self.scframe.place(x=1000, y=20)
 
-        # Load the prefabs in the scrollbar
-        self.prefabs = utils.load_prefabs()
-        self.prefabs_models = []
-        self.prefabs_buttons = []
-
-        for i, elem in enumerate(self.prefabs):
-            print("[" + str(i) + "] Creating " + elem['name'])
-            self.prefabs_models.append(PhotoImage(file='../images/' + elem['name'] + '.PNG'))
-            self.prefabs_buttons.append(Button(self.scframe.interior, image=self.prefabs_models[i], relief=FLAT,
-                            command=lambda opt=i: [self.models(opt)]))
-            self.prefabs_buttons[i].pack()
-
         # Polygons images next to + _ - buttons
         self.imgMT = PhotoImage(file='../images/MT.PNG')
         self.button = Button(self.numPolygonsFrame, image=self.imgMT, state="disabled")
@@ -226,6 +223,12 @@ class TangramCanvas:
         self.imgP = PhotoImage(file='../images/p.png')
         self.button = Button(self.numPolygonsFrame, image=self.imgP, state="disabled")
         self.button.grid(row=5, column=4)
+
+        # Load the prefabs in the scrollbar
+        self.prefabs = utils.load_prefabs()
+        self.prefabs_models = []
+        self.prefabs_buttons = []
+        self.setup_prefabs()
 
         # Polygons images + maximum limits
         self.max1 = Button(self.polygonsLimitsFrame, image=self.imgMT, state="disabled")
@@ -299,7 +302,6 @@ class TangramCanvas:
                                    command=lambda: [self.polygon_action("st", self.smallTriangleLabel, "del", 0)])
 
         # + or - buttons placement
-
         self.plusButton1.grid(row=1, column=1)
         self.medTriangleLabel.grid(row=1, column=2)
         self.minusButton1.grid(row=1, column=3)
@@ -329,7 +331,7 @@ class TangramCanvas:
         self.btn_validate.grid(row=1, column=1)
 
         self.btn_reset = Button(self.commandFrame, text="  Reset  ",
-                                command=lambda: [utils.reset_canvas(self.drawing_place, self.labels)])
+                                command=lambda: [CanvasUtils.reset_canvas(self.drawing_place, self.labels)])
         self.btn_reset.grid(row=1, column=2)
 
         # Updates polygons limits with program constants

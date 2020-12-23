@@ -1,5 +1,5 @@
 from math import radians, cos, sin
-from src.scripts import utils
+from src.scripts import utils, CanvasUtils
 
 
 class CanvasPolygon:
@@ -58,15 +58,15 @@ class CanvasPolygon:
             end_x = self.canvas.canvasx(event.x)  # Translate mouse x screen coordinate to canvas coordinate
             end_y = self.canvas.canvasy(event.y)  # Translate mouse y screen coordinate to canvas coordinate
 
-            deltax = end_x - self.init_x  # Find the difference
-            deltay = end_y - self.init_y  # Find the difference
+            delta_x = end_x - self.init_x  # Find the difference
+            delta_y = end_y - self.init_y  # Find the difference
 
-            self.new_position(deltax, deltay)
+            self.new_position(delta_x, delta_y)
 
             self.init_x = end_x  # Update previous current with new location
             self.init_y = end_y
 
-            self.canvas.move(self.id_, deltax, deltay)  # Move object
+            self.canvas.move(self.id_, delta_x, delta_y)  # Move object
 
     def stop_movement(self, event):
         """ Updates move attribute and sticks the moving polygon to nearby polygon """
@@ -74,12 +74,12 @@ class CanvasPolygon:
         nearby = utils.is_nearby(self.id_, self.canvas, self.magnet_slider)
         if nearby:
             self.delete()
-            CanvasPolygon(utils.replace(utils.tuple_to_list(self.coords), utils.tuple_to_list(nearby)),
+            CanvasPolygon(CanvasUtils.replace(utils.tuple_to_list(self.coords), utils.tuple_to_list(nearby)),
                           self.color, self.tag, self.canvas, self.magnet_slider)
 
         self.move = False
 
-    def new_position(self, deltax, deltay):
+    def new_position(self, delta_x, delta_y):
         """ Updates the coords of a polygon given the coordinates of the translation """
 
         coord = utils.tuple_to_list(self.coords)  # Retrieve object points coordinates
@@ -90,9 +90,9 @@ class CanvasPolygon:
 
             # check if index of coordinates in range of i and len(old_coord) in old_coord is pair (x coord)
             if (coord.index(coordinates, i, len(coord)) % 2) == 0:
-                coords.append(coordinates + deltax)
+                coords.append(coordinates + delta_x)
             else:  # index's impair => y-coord
-                coords.append(coordinates + deltay)
+                coords.append(coordinates + delta_y)
             i += 1
 
         self.set_coords(tuple(coords))
