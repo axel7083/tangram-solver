@@ -28,7 +28,7 @@ class TangramCanvas:
                 CanvasPolygon(coords, color, _type, self.drawing_place, self.magnet_slider)
                 CanvasUtils.update_count_label(label, "+")
             else:
-                messagebox.showerror("Maximum reach", "You've reached the maximum amount of this item.")
+                messagebox.showerror("Maximum reached", "You've reached the maximum amount of this item.")
         else:
             CanvasPolygon(coord, color, _type, self.drawing_place, self.magnet_slider)
             CanvasUtils.update_count_label(label, "+")
