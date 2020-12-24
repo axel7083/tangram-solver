@@ -63,5 +63,3 @@ def run_in_other_thread(queue, original, types):
     except TopologicalError:
         print("Error: " + str(TopologicalError))
         queue.put(False)
-
-

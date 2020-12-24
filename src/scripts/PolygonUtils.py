@@ -1,10 +1,6 @@
 import math
 from shapely.geometry import Polygon
 from shapely.ops import cascaded_union
-from random import uniform
-import matplotlib.pyplot as plt
-import numpy
-import json
 
 
 def center_index(shape, index):
@@ -34,7 +30,8 @@ def rotate_by(x_pivot, y_pivot, x_pos, y_pos, angle):
 def get_triangle_points(x_pos, y_pos, rotation, size):
     """ From one origin point get 3 coordinates of triangles """
 
-    return [[x_pos, y_pos], rotate_by(x_pos, y_pos, x_pos + size, y_pos, rotation), rotate_by(x_pos, y_pos, x_pos, y_pos + size, rotation)]
+    return [[x_pos, y_pos], rotate_by(x_pos, y_pos, x_pos + size, y_pos, rotation), rotate_by(x_pos, y_pos, x_pos,
+                                                                                              y_pos + size, rotation)]
 
 
 def get_square_points(x_pos, y_pos, rotation, size):
