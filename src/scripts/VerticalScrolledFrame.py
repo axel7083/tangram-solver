@@ -1,8 +1,8 @@
 import tkinter as tk
 
-
+# This class was taken from https://stackoverflow.com/questions/31762698/dynamic-button-with-scrollbar-in-tkinter-python
 class VerticalScrolledFrame(tk.Frame):
-    """A pure Tkinter scrollable frame that actually works!
+    """A pure Tkinter scrollable frame
 
     * Use the 'interior' attribute to place widgets inside the scrollable frame
     * Construct and pack/place/grid normally
