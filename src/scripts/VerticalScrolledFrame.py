@@ -1,6 +1,6 @@
 import tkinter as tk
 
-# This class was taken from https://stackoverflow.com/questions/31762698/dynamic-button-with-scrollbar-in-tkinter-python
+
 class VerticalScrolledFrame(tk.Frame):
     """A pure Tkinter scrollable frame
 
@@ -49,3 +49,5 @@ class VerticalScrolledFrame(tk.Frame):
                 canvas.itemconfigure(interior_id, width=canvas.winfo_width())
 
         canvas.bind('<Configure>', _configure_canvas)
+
+# This class was taken from https://stackoverflow.com/questions/31762698/dynamic-button-with-scrollbar-in-tkinter-python
