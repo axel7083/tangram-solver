@@ -80,9 +80,9 @@ def is_nearby(moving_figure, drawing_place, magnet_slider):
             j = j + 1
             for fig in coords_figures:
                 fix = fig
-                l = 0
-                while l < len(fig):
-                    l = l + 2
+                _l = 0  # cursor on fix
+                while _l < len(fig):
+                    _l = _l + 2
                     cut = get_xy_head(fix)
                     fix = fix[2:]
                     # checks if current point 'cut' is close enough to the moving figure point
