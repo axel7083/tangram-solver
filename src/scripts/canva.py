@@ -28,7 +28,7 @@ class TangramCanvas:
                 CanvasPolygon(coords, color, _type, self.drawing_place, self.magnet_slider)
                 CanvasUtils.update_count_label(label, "+")
             else:
-                messagebox.showerror("Maximum reach", "You've reached the maximum amount of this item.")
+                messagebox.showerror("Maximum reached", "You've reached the maximum amount of this item.")
         else:
             CanvasPolygon(coord, color, _type, self.drawing_place, self.magnet_slider)
             CanvasUtils.update_count_label(label, "+")
@@ -163,12 +163,26 @@ class TangramCanvas:
 
     def setup_prefabs(self):
         """ Setup the prefabs in the scrollbar """
+
         for i, elem in enumerate(self.prefabs):
             print("[" + str(i) + "] Creating " + elem['name'])
             self.prefabs_models.append(PhotoImage(file='../images/' + elem['name'] + '.PNG'))
             self.prefabs_buttons.append(Button(self.scframe.interior, image=self.prefabs_models[i], relief=FLAT,
                                                command=lambda opt=i: [self.models(opt)]))
             self.prefabs_buttons[i].pack()
+
+    @staticmethod
+    def welcome_message():
+        """ Indicates instructions to the user at loading """
+
+        messagebox.showinfo("Welcome",
+                            "- Click on the top-left plus or minus buttons to add or delete polygons on the canvas\n"
+                            "- Use your right click mouse to rotate a given polygon\n"
+                            "- Click on the right models to draw a predefined figure\n"
+                            "- Click on validate button when your figure is finished\n"
+                            "- The solution will pop-up in another window\n"
+                            "(It can last between 1 second and a few minutes)\n"
+                            )
 
     def __init__(self):
         """ Tkinter objets definitions """
@@ -334,8 +348,8 @@ class TangramCanvas:
                                 command=lambda: [CanvasUtils.reset_canvas(self.drawing_place, self.labels)])
         self.btn_reset.grid(row=1, column=2)
 
-        # Updates polygons limits with program constants
-        self.get_polygons_limits()
+        self.get_polygons_limits()  # Updates polygons limits with program constants
+        self.welcome_message()  # Shows instructions to the user
 
     def start(self):
         # Run the main loop:
